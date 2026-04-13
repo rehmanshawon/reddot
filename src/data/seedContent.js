@@ -1,6 +1,6 @@
-export const seedContent = {
+export const defaultContent = {
   site: {
-    heroTag: "Bangladesh Advertising Film Studio",
+    heroTag: "Bangladesh's Leading Advertising Film Studio",
     heroTitle: "We turn brand stories into moving images that hold attention.",
     heroText:
       "Red Dot crafts premium advertising films for television, YouTube, and Facebook with cinematic production, agile creative development, and campaign thinking built for modern audiences.",
@@ -196,7 +196,8 @@ export const seedContent = {
     },
   ],
   about: {
-    title: "A production house built for brands that want memorable commercial storytelling.",
+    title:
+      "A production house built for brands that want memorable commercial storytelling.",
     description:
       "Red Dot is an advertising film agency in Bangladesh known for combining strong creative direction, polished production execution, and platform-aware storytelling. We collaborate with ambitious brands to create films that look cinematic, travel across channels, and stay relevant in a fast-moving attention economy.",
     points: [
@@ -233,8 +234,7 @@ export const seedContent = {
       role: "Creative Director",
       photo:
         "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=900&q=80",
-      bio:
-        "Leads concept development across commercial films with a focus on cultural relevance and visually bold campaign worlds.",
+      bio: "Leads concept development across commercial films with a focus on cultural relevance and visually bold campaign worlds.",
     },
     {
       id: "team-2",
@@ -242,8 +242,7 @@ export const seedContent = {
       role: "Head of Production",
       photo:
         "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&w=900&q=80",
-      bio:
-        "Coordinates crews, locations, schedules, and delivery to keep complex productions calm, fast, and execution-focused.",
+      bio: "Coordinates crews, locations, schedules, and delivery to keep complex productions calm, fast, and execution-focused.",
     },
     {
       id: "team-3",
@@ -251,8 +250,7 @@ export const seedContent = {
       role: "Film Director",
       photo:
         "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=900&q=80",
-      bio:
-        "Builds performance-led films with a cinematic eye for movement, rhythm, and emotional precision.",
+      bio: "Builds performance-led films with a cinematic eye for movement, rhythm, and emotional precision.",
     },
     {
       id: "team-4",
@@ -260,8 +258,7 @@ export const seedContent = {
       role: "Post-Production Supervisor",
       photo:
         "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=900&q=80",
-      bio:
-        "Shapes edit, color, and finishing workflows to keep the final film sharp across TV and social media placements.",
+      bio: "Shapes edit, color, and finishing workflows to keep the final film sharp across TV and social media placements.",
     },
     {
       id: "team-5",
@@ -269,8 +266,7 @@ export const seedContent = {
       role: "Creative Producer",
       photo:
         "https://images.unsplash.com/photo-1504593811423-6dd665756598?auto=format&fit=crop&w=900&q=80",
-      bio:
-        "Connects brand strategy with production realities, helping ideas stay bold while remaining shootable and scalable.",
+      bio: "Connects brand strategy with production realities, helping ideas stay bold while remaining shootable and scalable.",
     },
     {
       id: "team-6",
@@ -278,12 +274,17 @@ export const seedContent = {
       role: "Art Director",
       photo:
         "https://images.unsplash.com/photo-1488426862026-3ee34a7d66df?auto=format&fit=crop&w=900&q=80",
-      bio:
-        "Designs environments, textures, and visual language that give each campaign its own memorable production identity.",
+      bio: "Designs environments, textures, and visual language that give each campaign its own memorable production identity.",
     },
   ],
-  admin: {
-    email: "admin@reddot.local",
-    password: "reddot-admin",
-  },
+};
+
+export const demoAdmin = {
+  email: "admin@reddot.local",
+  password: "reddot-admin",
+};
+
+export const seedContent = {
+  ...defaultContent,
+  admin: demoAdmin,
 };

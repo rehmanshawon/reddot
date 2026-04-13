@@ -1,45 +1,69 @@
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
-import { seedContent } from "../data/seedContent";
+import { defaultContent } from "../data/seedContent";
+import { fetchContent, resetContent as resetContentRequest, updateContentSection } from "../lib/api";
+import { useAuth } from "./AuthContext";
 
 const ContentContext = createContext(null);
-const CONTENT_KEY = "red-dot-content";
-
-function readStoredContent() {
-  const saved = window.localStorage.getItem(CONTENT_KEY);
-  if (!saved) {
-    return seedContent;
-  }
-
-  try {
-    return JSON.parse(saved);
-  } catch {
-    return seedContent;
-  }
-}
 
 export function ContentProvider({ children }) {
-  const [content, setContent] = useState(seedContent);
+  const { token } = useAuth();
+  const [content, setContent] = useState(defaultContent);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState("");
 
   useEffect(() => {
-    setContent(readStoredContent());
+    let isCancelled = false;
+
+    async function loadContent() {
+      try {
+        setError("");
+        const response = await fetchContent();
+        if (!isCancelled) {
+          setContent(response.content);
+        }
+      } catch (requestError) {
+        if (!isCancelled) {
+          setError(requestError.message);
+        }
+      } finally {
+        if (!isCancelled) {
+          setIsLoading(false);
+        }
+      }
+    }
+
+    loadContent();
+
+    return () => {
+      isCancelled = true;
+    };
   }, []);
-
-  useEffect(() => {
-    window.localStorage.setItem(CONTENT_KEY, JSON.stringify(content));
-  }, [content]);
 
   const value = useMemo(
     () => ({
       content,
-      updateContent: (section, nextValue) => {
-        setContent((current) => ({
-          ...current,
-          [section]: nextValue,
-        }));
+      error,
+      isLoading,
+      async refreshContent() {
+        const response = await fetchContent();
+        setContent(response.content);
+        setError("");
+        return response.content;
       },
-      resetContent: () => setContent(seedContent),
+      async saveSection(section, nextValue) {
+        const response = await updateContentSection(section, nextValue, token);
+        setContent(response.content);
+        setError("");
+        return response.content;
+      },
+      async resetContent() {
+        const response = await resetContentRequest(token);
+        setContent(response.content);
+        setError("");
+        return response.content;
+      },
     }),
-    [content],
+    [content, error, isLoading, token],
   );
 
   return <ContentContext.Provider value={value}>{children}</ContentContext.Provider>;

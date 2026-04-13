@@ -1,35 +1,68 @@
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
-import { seedContent } from "../data/seedContent";
+import { fetchCurrentAdmin, loginAdmin } from "../lib/api";
 
 const AuthContext = createContext(null);
-const AUTH_KEY = "red-dot-auth";
+const AUTH_TOKEN_KEY = "red-dot-auth-token";
 
 export function AuthProvider({ children }) {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [token, setToken] = useState("");
+  const [user, setUser] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const saved = window.localStorage.getItem(AUTH_KEY);
-    setIsAuthenticated(saved === "true");
+    let isCancelled = false;
+
+    async function restoreSession() {
+      const savedToken = window.localStorage.getItem(AUTH_TOKEN_KEY);
+      if (!savedToken) {
+        if (!isCancelled) {
+          setIsLoading(false);
+        }
+        return;
+      }
+
+      try {
+        const response = await fetchCurrentAdmin(savedToken);
+        if (!isCancelled) {
+          setToken(savedToken);
+          setUser(response.user);
+        }
+      } catch {
+        window.localStorage.removeItem(AUTH_TOKEN_KEY);
+      } finally {
+        if (!isCancelled) {
+          setIsLoading(false);
+        }
+      }
+    }
+
+    restoreSession();
+
+    return () => {
+      isCancelled = true;
+    };
   }, []);
 
   const value = useMemo(
     () => ({
-      isAuthenticated,
-      login: ({ email, password }) => {
-        const valid =
-          email === seedContent.admin.email && password === seedContent.admin.password;
-        if (valid) {
-          window.localStorage.setItem(AUTH_KEY, "true");
-          setIsAuthenticated(true);
-        }
-        return valid;
+      isAuthenticated: Boolean(token),
+      isLoading,
+      token,
+      user,
+      async login(credentials) {
+        const response = await loginAdmin(credentials);
+        window.localStorage.setItem(AUTH_TOKEN_KEY, response.token);
+        setToken(response.token);
+        setUser(response.user);
+        return response.user;
       },
-      logout: () => {
-        window.localStorage.removeItem(AUTH_KEY);
-        setIsAuthenticated(false);
+      logout() {
+        window.localStorage.removeItem(AUTH_TOKEN_KEY);
+        setToken("");
+        setUser(null);
       },
     }),
-    [isAuthenticated],
+    [isLoading, token, user],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

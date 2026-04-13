@@ -21,13 +21,29 @@ function InputField({ label, value, onChange }) {
 }
 
 export default function AdminPage() {
-  const { content, updateContent, resetContent } = useContent();
+  const { content, isLoading, error, saveSection, resetContent } = useContent();
   const [status, setStatus] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
+  const [siteDraft, setSiteDraft] = useState(content.site);
+  const [aboutDraft, setAboutDraft] = useState(content.about);
+  const [statsDraft, setStatsDraft] = useState("");
   const [featuredWorksDraft, setFeaturedWorksDraft] = useState("");
   const [worksArchiveDraft, setWorksArchiveDraft] = useState("");
   const [btsGalleryDraft, setBtsGalleryDraft] = useState("");
   const [leadershipDraft, setLeadershipDraft] = useState("");
   const [teamDraft, setTeamDraft] = useState("");
+
+  useEffect(() => {
+    setSiteDraft(content.site);
+  }, [content.site]);
+
+  useEffect(() => {
+    setAboutDraft(content.about);
+  }, [content.about]);
+
+  useEffect(() => {
+    setStatsDraft(JSON.stringify(content.stats, null, 2));
+  }, [content.stats]);
 
   useEffect(() => {
     setFeaturedWorksDraft(JSON.stringify(content.featuredWorks, null, 2));
@@ -49,21 +65,61 @@ export default function AdminPage() {
     setTeamDraft(JSON.stringify(content.team, null, 2));
   }, [content.team]);
 
-  const saveJsonSection = (section, value) => {
+  async function saveSectionValue(section, value, successLabel) {
+    setStatus("");
+    setIsSaving(true);
+
     try {
-      updateContent(section, JSON.parse(value));
-      setStatus(`${section} updated.`);
-    } catch {
-      setStatus(`Could not update ${section}. Please provide valid JSON.`);
+      await saveSection(section, value);
+      setStatus(`${successLabel} saved.`);
+    } catch (requestError) {
+      setStatus(requestError.message || `Could not save ${successLabel.toLowerCase()}.`);
+    } finally {
+      setIsSaving(false);
     }
-  };
+  }
+
+  async function saveJsonSection(section, value, successLabel) {
+    try {
+      const parsed = JSON.parse(value);
+      await saveSectionValue(section, parsed, successLabel);
+    } catch {
+      setStatus(`Could not save ${successLabel.toLowerCase()}. Please provide valid JSON.`);
+    }
+  }
+
+  async function resetAllContent() {
+    setStatus("");
+    setIsSaving(true);
+
+    try {
+      await resetContent();
+      setStatus("Sample content restored.");
+    } catch (requestError) {
+      setStatus(requestError.message || "Could not reset content.");
+    } finally {
+      setIsSaving(false);
+    }
+  }
+
+  if (isLoading) {
+    return (
+      <section className="section admin-layout">
+        <SectionHeader
+          eyebrow="Admin Studio"
+          title="Update website content from one dashboard"
+          text="Loading saved content from the backend."
+        />
+      </section>
+    );
+  }
 
   return (
     <section className="section admin-layout">
       <SectionHeader
         eyebrow="Admin Studio"
         title="Update website content from one dashboard"
-        text="For now, edits are stored in browser local storage. This structure is ready to be connected to a NestJS API and database later."
+        text="These edits now save through the Node.js backend, so the live website can stay in sync with the admin dashboard."
       />
 
       <div className="admin-grid">
@@ -72,27 +128,37 @@ export default function AdminPage() {
           <div className="admin-form">
             <InputField
               label="Hero tag"
-              value={content.site.heroTag}
-              onChange={(value) => updateContent("site", { ...content.site, heroTag: value })}
+              value={siteDraft.heroTag}
+              onChange={(value) => setSiteDraft((current) => ({ ...current, heroTag: value }))}
             />
             <TextareaField
               label="Hero title"
-              value={content.site.heroTitle}
-              onChange={(value) => updateContent("site", { ...content.site, heroTitle: value })}
+              value={siteDraft.heroTitle}
+              onChange={(value) => setSiteDraft((current) => ({ ...current, heroTitle: value }))}
               rows={3}
             />
             <TextareaField
               label="Hero text"
-              value={content.site.heroText}
-              onChange={(value) => updateContent("site", { ...content.site, heroText: value })}
+              value={siteDraft.heroText}
+              onChange={(value) => setSiteDraft((current) => ({ ...current, heroText: value }))}
               rows={5}
             />
             <TextareaField
               label="Agency intro"
-              value={content.site.agencyIntro}
-              onChange={(value) => updateContent("site", { ...content.site, agencyIntro: value })}
+              value={siteDraft.agencyIntro}
+              onChange={(value) =>
+                setSiteDraft((current) => ({ ...current, agencyIntro: value }))
+              }
               rows={4}
             />
+            <button
+              type="button"
+              className="button button--solid"
+              disabled={isSaving}
+              onClick={() => saveSectionValue("site", siteDraft, "Homepage copy")}
+            >
+              Save homepage copy
+            </button>
           </div>
         </div>
 
@@ -101,30 +167,54 @@ export default function AdminPage() {
           <div className="admin-form">
             <TextareaField
               label="About title"
-              value={content.about.title}
-              onChange={(value) => updateContent("about", { ...content.about, title: value })}
+              value={aboutDraft.title}
+              onChange={(value) => setAboutDraft((current) => ({ ...current, title: value }))}
               rows={3}
             />
             <TextareaField
               label="About description"
-              value={content.about.description}
+              value={aboutDraft.description}
               onChange={(value) =>
-                updateContent("about", { ...content.about, description: value })
+                setAboutDraft((current) => ({ ...current, description: value }))
               }
               rows={6}
             />
             <TextareaField
               label="Service points (one per line)"
-              value={content.about.points.join("\n")}
+              value={aboutDraft.points.join("\n")}
               onChange={(value) =>
-                updateContent("about", {
-                  ...content.about,
-                  points: value.split("\n").filter(Boolean),
-                })
+                setAboutDraft((current) => ({
+                  ...current,
+                  points: value
+                    .split("\n")
+                    .map((item) => item.trim())
+                    .filter(Boolean),
+                }))
               }
               rows={5}
             />
+            <button
+              type="button"
+              className="button button--solid"
+              disabled={isSaving}
+              onClick={() => saveSectionValue("about", aboutDraft, "About copy")}
+            >
+              Save about copy
+            </button>
           </div>
+        </div>
+
+        <div className="panel">
+          <h3>Stats JSON</h3>
+          <TextareaField label="Stats strip" value={statsDraft} onChange={setStatsDraft} rows={12} />
+          <button
+            type="button"
+            className="button button--solid"
+            disabled={isSaving}
+            onClick={() => saveJsonSection("stats", statsDraft, "Stats")}
+          >
+            Save stats
+          </button>
         </div>
 
         <div className="panel">
@@ -138,7 +228,8 @@ export default function AdminPage() {
           <button
             type="button"
             className="button button--solid"
-            onClick={() => saveJsonSection("featuredWorks", featuredWorksDraft)}
+            disabled={isSaving}
+            onClick={() => saveJsonSection("featuredWorks", featuredWorksDraft, "Featured works")}
           >
             Save featured works
           </button>
@@ -155,7 +246,8 @@ export default function AdminPage() {
           <button
             type="button"
             className="button button--solid"
-            onClick={() => saveJsonSection("worksArchive", worksArchiveDraft)}
+            disabled={isSaving}
+            onClick={() => saveJsonSection("worksArchive", worksArchiveDraft, "Works archive")}
           >
             Save works archive
           </button>
@@ -172,7 +264,8 @@ export default function AdminPage() {
           <button
             type="button"
             className="button button--solid"
-            onClick={() => saveJsonSection("btsGallery", btsGalleryDraft)}
+            disabled={isSaving}
+            onClick={() => saveJsonSection("btsGallery", btsGalleryDraft, "BTS gallery")}
           >
             Save BTS gallery
           </button>
@@ -189,7 +282,8 @@ export default function AdminPage() {
           <button
             type="button"
             className="button button--solid"
-            onClick={() => saveJsonSection("leadership", leadershipDraft)}
+            disabled={isSaving}
+            onClick={() => saveJsonSection("leadership", leadershipDraft, "Leadership")}
           >
             Save leadership
           </button>
@@ -206,7 +300,8 @@ export default function AdminPage() {
           <button
             type="button"
             className="button button--solid"
-            onClick={() => saveJsonSection("team", teamDraft)}
+            disabled={isSaving}
+            onClick={() => saveJsonSection("team", teamDraft, "Team")}
           >
             Save team
           </button>
@@ -214,10 +309,11 @@ export default function AdminPage() {
       </div>
 
       <div className="admin-actions">
-        <button type="button" className="button button--ghost" onClick={resetContent}>
+        <button type="button" className="button button--ghost" disabled={isSaving} onClick={resetAllContent}>
           Reset sample content
         </button>
         {status ? <p className="admin-status">{status}</p> : null}
+        {!status && error ? <p className="admin-status">{error}</p> : null}
       </div>
     </section>
   );

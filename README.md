@@ -1,6 +1,6 @@
-# Red Dot Frontend
+# Red Dot
 
-React frontend for Red Dot, a Bangladesh advertising film agency.
+React frontend plus a lightweight Node.js backend for Red Dot, a Bangladesh advertising film agency.
 
 ## Included
 
@@ -11,21 +11,25 @@ React frontend for Red Dot, a Bangladesh advertising film agency.
 - About page
 - Leadership message page
 - Creative team page
-- Admin login/logout placeholder
-- Admin dashboard with editable local content
+- Admin login/logout
+- Admin dashboard with editable persisted content
 
 ## Tech
 
 - React
 - Vite
 - React Router
+- Node.js
 
 ## Run
 
 ```bash
 npm install
+npm run server
 npm run dev
 ```
+
+The Vite dev server proxies `/api` requests to `http://localhost:3001`.
 
 ## Demo Admin Credentials
 
@@ -34,7 +38,39 @@ npm run dev
 
 ## Notes
 
-- Current content is sample data stored in browser local storage.
-- Admin authentication is frontend-only for now.
-- Next phase can replace the local content store with NestJS APIs and database-backed content.
-- The frontend can be deployed to AWS S3 + CloudFront or paired with a NestJS backend on ECS, Elastic Beanstalk, or EC2.
+- Content is stored by the Node.js backend in `backend/data/content.json`.
+- Admin authentication is handled by backend-issued bearer tokens.
+- Production secrets should be set from environment variables instead of defaults.
+- On EC2, run the Node API on an internal port such as `3001` and proxy `/api` through Nginx.
+
+## EC2 Deploy
+
+1. Pull the latest code onto the server:
+
+```bash
+cd /var/www/reddot-app
+git pull
+npm install
+npm run build
+```
+
+2. Start the Node API with PM2:
+
+```bash
+pm2 start ecosystem.config.cjs
+pm2 save
+```
+
+3. Copy the Nginx example config from `deploy/nginx.reddot.ilogicmagic.com.conf` into your active site config, then reload Nginx:
+
+```bash
+sudo nginx -t
+sudo systemctl reload nginx
+```
+
+4. Verify:
+
+```bash
+curl -I https://reddot.ilogicmagic.com
+curl https://reddot.ilogicmagic.com/api/health
+```

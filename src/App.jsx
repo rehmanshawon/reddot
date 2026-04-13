@@ -12,7 +12,10 @@ import TeamPage from "./pages/TeamPage";
 import WorksPage from "./pages/WorksPage";
 
 function ProtectedRoute({ children }) {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, isLoading } = useAuth();
+  if (isLoading) {
+    return null;
+  }
   return isAuthenticated ? children : <Navigate to="/login" replace />;
 }
 

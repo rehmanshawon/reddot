@@ -3,27 +3,35 @@ import { Navigate, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 
 export default function LoginPage() {
-  const { isAuthenticated, login } = useAuth();
+  const { isAuthenticated, isLoading, login } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [form, setForm] = useState({ email: "", password: "" });
   const [error, setError] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  if (isLoading) {
+    return null;
+  }
 
   if (isAuthenticated) {
     return <Navigate to="/admin" replace />;
   }
 
-  const onSubmit = (event) => {
+  const onSubmit = async (event) => {
     event.preventDefault();
-    const success = login(form);
+    setError("");
+    setIsSubmitting(true);
 
-    if (!success) {
-      setError("Invalid admin email or password.");
-      return;
+    try {
+      await login(form);
+      const redirectTo = location.state?.from?.pathname || "/admin";
+      navigate(redirectTo, { replace: true });
+    } catch (requestError) {
+      setError(requestError.message || "Invalid admin email or password.");
+    } finally {
+      setIsSubmitting(false);
     }
-
-    const redirectTo = location.state?.from?.pathname || "/admin";
-    navigate(redirectTo, { replace: true });
   };
 
   return (
@@ -32,8 +40,8 @@ export default function LoginPage() {
         <p className="section-header__eyebrow">Admin Access</p>
         <h1>Sign in to manage site content</h1>
         <p>
-          This is a frontend-only placeholder auth flow. We will replace it with secure NestJS
-          authentication later.
+          This is now connected to the backend API. Use your server-side admin credentials to
+          access the dashboard.
         </p>
         <form className="auth-form" onSubmit={onSubmit}>
           <label>
@@ -57,13 +65,10 @@ export default function LoginPage() {
             />
           </label>
           {error ? <p className="form-error">{error}</p> : null}
-          <button type="submit" className="button button--solid button--full">
-            Login
+          <button type="submit" className="button button--solid button--full" disabled={isSubmitting}>
+            {isSubmitting ? "Signing in..." : "Login"}
           </button>
         </form>
-        <p className="auth-hint">
-          Demo credentials: <strong>admin@reddot.local</strong> / <strong>reddot-admin</strong>
-        </p>
       </div>
     </section>
   );
