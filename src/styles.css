@@ -427,6 +427,44 @@ p {
 }
 
 /* ============================
+   HERO VIDEO SOUND TOGGLE
+   ============================ */
+
+.hero-video__sound {
+  position: absolute;
+  top: 6rem;
+  right: 1.5rem;
+  z-index: 10;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(8px);
+  color: #ffffff;
+  font-size: 1.1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  cursor: pointer;
+  transition:
+    background var(--transition),
+    transform var(--transition);
+}
+
+.hero-video__sound:hover {
+  background: rgba(0, 0, 0, 0.7);
+  transform: scale(1.1);
+}
+
+@media (min-width: 1024px) {
+  .hero-video__sound {
+    top: 7rem;
+    right: 2rem;
+  }
+}
+
+/* ============================
    HERO TAGLINE (animated side heading)
    ============================ */
 
