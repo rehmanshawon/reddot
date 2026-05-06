@@ -35,41 +35,57 @@ export default function LoginPage() {
   };
 
   return (
-    <section className="section auth-layout">
+    <div className="login-page">
       <div className="auth-card">
-        <p className="section-header__eyebrow">Admin Access</p>
-        <h1>Sign in to manage site content</h1>
-        <p>
-          This is now connected to the backend API. Use your server-side admin credentials to
-          access the dashboard.
-        </p>
+        <img
+          src="/logo-light.png"
+          alt="RED DOT"
+          style={{ height: "36px", marginBottom: "2rem" }}
+        />
+        <p className="section-header__eyebrow">ADMIN ACCESS</p>
+        <h1>SIGN IN</h1>
+        <p>Enter your credentials to manage site content.</p>
         <form className="auth-form" onSubmit={onSubmit}>
           <label>
-            Email
+            EMAIL
             <input
               type="email"
               value={form.email}
-              onChange={(event) => setForm((current) => ({ ...current, email: event.target.value }))}
+              onChange={(event) =>
+                setForm((current) => ({
+                  ...current,
+                  email: event.target.value,
+                }))
+              }
               placeholder="admin@reddot.local"
+              autoComplete="email"
             />
           </label>
           <label>
-            Password
+            PASSWORD
             <input
               type="password"
               value={form.password}
               onChange={(event) =>
-                setForm((current) => ({ ...current, password: event.target.value }))
+                setForm((current) => ({
+                  ...current,
+                  password: event.target.value,
+                }))
               }
-              placeholder="reddot-admin"
+              placeholder="••••••••"
+              autoComplete="current-password"
             />
           </label>
           {error ? <p className="form-error">{error}</p> : null}
-          <button type="submit" className="button button--solid button--full" disabled={isSubmitting}>
-            {isSubmitting ? "Signing in..." : "Login"}
+          <button
+            type="submit"
+            className="button button--solid button--full"
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? "SIGNING IN..." : "LOGIN"}
           </button>
         </form>
       </div>
-    </section>
+    </div>
   );
 }

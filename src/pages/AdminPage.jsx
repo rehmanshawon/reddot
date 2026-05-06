@@ -1,12 +1,20 @@
 import { useEffect, useState } from "react";
 import SectionHeader from "../components/SectionHeader";
+import { useAuth } from "../context/AuthContext";
 import { useContent } from "../context/ContentContext";
+import WorksEditor from "../lib/WorksEditor";
+import BtsEditor from "../lib/BtsEditor";
+import StatsEditor from "../lib/StatsEditor";
 
 function TextareaField({ label, value, onChange, rows = 4 }) {
   return (
     <label className="admin-form__field">
       <span>{label}</span>
-      <textarea rows={rows} value={value} onChange={(event) => onChange(event.target.value)} />
+      <textarea
+        rows={rows}
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+      />
     </label>
   );
 }
@@ -21,15 +29,12 @@ function InputField({ label, value, onChange }) {
 }
 
 export default function AdminPage() {
+  const { user, logout } = useAuth();
   const { content, isLoading, error, saveSection, resetContent } = useContent();
   const [status, setStatus] = useState("");
   const [isSaving, setIsSaving] = useState(false);
   const [siteDraft, setSiteDraft] = useState(content.site);
   const [aboutDraft, setAboutDraft] = useState(content.about);
-  const [statsDraft, setStatsDraft] = useState("");
-  const [featuredWorksDraft, setFeaturedWorksDraft] = useState("");
-  const [worksArchiveDraft, setWorksArchiveDraft] = useState("");
-  const [btsGalleryDraft, setBtsGalleryDraft] = useState("");
   const [leadershipDraft, setLeadershipDraft] = useState("");
   const [teamDraft, setTeamDraft] = useState("");
 
@@ -40,22 +45,6 @@ export default function AdminPage() {
   useEffect(() => {
     setAboutDraft(content.about);
   }, [content.about]);
-
-  useEffect(() => {
-    setStatsDraft(JSON.stringify(content.stats, null, 2));
-  }, [content.stats]);
-
-  useEffect(() => {
-    setFeaturedWorksDraft(JSON.stringify(content.featuredWorks, null, 2));
-  }, [content.featuredWorks]);
-
-  useEffect(() => {
-    setWorksArchiveDraft(JSON.stringify(content.worksArchive, null, 2));
-  }, [content.worksArchive]);
-
-  useEffect(() => {
-    setBtsGalleryDraft(JSON.stringify(content.btsGallery, null, 2));
-  }, [content.btsGallery]);
 
   useEffect(() => {
     setLeadershipDraft(JSON.stringify(content.leadership, null, 2));
@@ -73,7 +62,9 @@ export default function AdminPage() {
       await saveSection(section, value);
       setStatus(`${successLabel} saved.`);
     } catch (requestError) {
-      setStatus(requestError.message || `Could not save ${successLabel.toLowerCase()}.`);
+      setStatus(
+        requestError.message || `Could not save ${successLabel.toLowerCase()}.`,
+      );
     } finally {
       setIsSaving(false);
     }
@@ -84,7 +75,9 @@ export default function AdminPage() {
       const parsed = JSON.parse(value);
       await saveSectionValue(section, parsed, successLabel);
     } catch {
-      setStatus(`Could not save ${successLabel.toLowerCase()}. Please provide valid JSON.`);
+      setStatus(
+        `Could not save ${successLabel.toLowerCase()}. Please provide valid JSON.`,
+      );
     }
   }
 
@@ -116,6 +109,23 @@ export default function AdminPage() {
 
   return (
     <section className="section admin-layout">
+      <div className="admin-header">
+        <div>
+          <p className="section-header__eyebrow">ADMIN STUDIO</p>
+          <h2>Content Dashboard</h2>
+          <p>
+            Logged in as <strong>{user?.email}</strong>
+          </p>
+        </div>
+        <button
+          type="button"
+          className="button button--ghost"
+          onClick={logout}
+          style={{ color: "var(--red)", borderColor: "var(--red)" }}
+        >
+          LOGOUT
+        </button>
+      </div>
       <SectionHeader
         eyebrow="Admin Studio"
         title="Update website content from one dashboard"
@@ -129,18 +139,24 @@ export default function AdminPage() {
             <InputField
               label="Hero tag"
               value={siteDraft.heroTag}
-              onChange={(value) => setSiteDraft((current) => ({ ...current, heroTag: value }))}
+              onChange={(value) =>
+                setSiteDraft((current) => ({ ...current, heroTag: value }))
+              }
             />
             <TextareaField
               label="Hero title"
               value={siteDraft.heroTitle}
-              onChange={(value) => setSiteDraft((current) => ({ ...current, heroTitle: value }))}
+              onChange={(value) =>
+                setSiteDraft((current) => ({ ...current, heroTitle: value }))
+              }
               rows={3}
             />
             <TextareaField
               label="Hero text"
               value={siteDraft.heroText}
-              onChange={(value) => setSiteDraft((current) => ({ ...current, heroText: value }))}
+              onChange={(value) =>
+                setSiteDraft((current) => ({ ...current, heroText: value }))
+              }
               rows={5}
             />
             <TextareaField
@@ -155,7 +171,9 @@ export default function AdminPage() {
               type="button"
               className="button button--solid"
               disabled={isSaving}
-              onClick={() => saveSectionValue("site", siteDraft, "Homepage copy")}
+              onClick={() =>
+                saveSectionValue("site", siteDraft, "Homepage copy")
+              }
             >
               Save homepage copy
             </button>
@@ -168,7 +186,9 @@ export default function AdminPage() {
             <TextareaField
               label="About title"
               value={aboutDraft.title}
-              onChange={(value) => setAboutDraft((current) => ({ ...current, title: value }))}
+              onChange={(value) =>
+                setAboutDraft((current) => ({ ...current, title: value }))
+              }
               rows={3}
             />
             <TextareaField
@@ -197,78 +217,20 @@ export default function AdminPage() {
               type="button"
               className="button button--solid"
               disabled={isSaving}
-              onClick={() => saveSectionValue("about", aboutDraft, "About copy")}
+              onClick={() =>
+                saveSectionValue("about", aboutDraft, "About copy")
+              }
             >
               Save about copy
             </button>
           </div>
         </div>
 
-        <div className="panel">
-          <h3>Stats JSON</h3>
-          <TextareaField label="Stats strip" value={statsDraft} onChange={setStatsDraft} rows={12} />
-          <button
-            type="button"
-            className="button button--solid"
-            disabled={isSaving}
-            onClick={() => saveJsonSection("stats", statsDraft, "Stats")}
-          >
-            Save stats
-          </button>
-        </div>
-
-        <div className="panel">
-          <h3>Featured works JSON</h3>
-          <TextareaField
-            label="Featured works"
-            value={featuredWorksDraft}
-            onChange={setFeaturedWorksDraft}
-            rows={16}
-          />
-          <button
-            type="button"
-            className="button button--solid"
-            disabled={isSaving}
-            onClick={() => saveJsonSection("featuredWorks", featuredWorksDraft, "Featured works")}
-          >
-            Save featured works
-          </button>
-        </div>
-
-        <div className="panel">
-          <h3>Works archive JSON</h3>
-          <TextareaField
-            label="Works archive"
-            value={worksArchiveDraft}
-            onChange={setWorksArchiveDraft}
-            rows={16}
-          />
-          <button
-            type="button"
-            className="button button--solid"
-            disabled={isSaving}
-            onClick={() => saveJsonSection("worksArchive", worksArchiveDraft, "Works archive")}
-          >
-            Save works archive
-          </button>
-        </div>
-
-        <div className="panel">
-          <h3>BTS gallery JSON</h3>
-          <TextareaField
-            label="BTS gallery"
-            value={btsGalleryDraft}
-            onChange={setBtsGalleryDraft}
-            rows={16}
-          />
-          <button
-            type="button"
-            className="button button--solid"
-            disabled={isSaving}
-            onClick={() => saveJsonSection("btsGallery", btsGalleryDraft, "BTS gallery")}
-          >
-            Save BTS gallery
-          </button>
+        <div style={{ gridColumn: "1 / -1" }}>
+          <WorksEditor sectionName="featuredWorks" />
+          <WorksEditor sectionName="worksArchive" />
+          <BtsEditor />
+          <StatsEditor />
         </div>
 
         <div className="panel">
@@ -283,7 +245,9 @@ export default function AdminPage() {
             type="button"
             className="button button--solid"
             disabled={isSaving}
-            onClick={() => saveJsonSection("leadership", leadershipDraft, "Leadership")}
+            onClick={() =>
+              saveJsonSection("leadership", leadershipDraft, "Leadership")
+            }
           >
             Save leadership
           </button>
@@ -309,7 +273,12 @@ export default function AdminPage() {
       </div>
 
       <div className="admin-actions">
-        <button type="button" className="button button--ghost" disabled={isSaving} onClick={resetAllContent}>
+        <button
+          type="button"
+          className="button button--ghost"
+          disabled={isSaving}
+          onClick={resetAllContent}
+        >
           Reset sample content
         </button>
         {status ? <p className="admin-status">{status}</p> : null}

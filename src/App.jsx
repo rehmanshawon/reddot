@@ -5,9 +5,9 @@ import AboutPage from "./pages/AboutPage";
 import AdminPage from "./pages/AdminPage";
 import BtsPage from "./pages/BtsPage";
 import HomePage from "./pages/HomePage";
-import LeadershipPage from "./pages/LeadershipPage";
 import LoginPage from "./pages/LoginPage";
 import NotFoundPage from "./pages/NotFoundPage";
+import ServicesPage from "./pages/ServicesPage";
 import TeamPage from "./pages/TeamPage";
 import WorksPage from "./pages/WorksPage";
 
@@ -26,10 +26,10 @@ export default function App() {
         <Route index element={<HomePage />} />
         <Route path="/works" element={<WorksPage />} />
         <Route path="/bts" element={<BtsPage />} />
-        <Route path="/about" element={<AboutPage />} />
-        <Route path="/leadership" element={<LeadershipPage />} />
+        <Route path="/services" element={<ServicesPage />} />
         <Route path="/team" element={<TeamPage />} />
-        <Route path="/login" element={<LoginPage />} />
+        <Route path="/about" element={<AboutPage />} />
+        <Route path="/contact" element={<NotFoundPage />} />
         <Route
           path="/admin"
           element={
@@ -40,6 +40,9 @@ export default function App() {
         />
         <Route path="*" element={<NotFoundPage />} />
       </Route>
+
+      {/* Login route — outside main Layout, no nav/footer */}
+      <Route path="/login" element={<LoginPage />} />
     </Routes>
   );
 }

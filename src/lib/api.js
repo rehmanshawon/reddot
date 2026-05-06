@@ -1,14 +1,15 @@
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "";
 
 async function request(path, { body, headers, token, ...options } = {}) {
+  const isFormData = body instanceof FormData;
   const response = await fetch(`${API_BASE_URL}${path}`, {
     ...options,
     headers: {
-      ...(body ? { "Content-Type": "application/json" } : {}),
+      ...(body && !isFormData ? { "Content-Type": "application/json" } : {}),
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
       ...headers,
     },
-    body: body ? JSON.stringify(body) : undefined,
+    body: body ? (isFormData ? body : JSON.stringify(body)) : undefined,
   });
 
   const payload = await response.json().catch(() => ({}));
@@ -28,6 +29,16 @@ export function loginAdmin(credentials) {
   return request("/api/auth/login", {
     method: "POST",
     body: credentials,
+  });
+}
+
+export function uploadFile(file, token) {
+  const formData = new FormData();
+  formData.append("file", file);
+  return request("/api/upload", {
+    method: "POST",
+    token,
+    body: formData,
   });
 }
 

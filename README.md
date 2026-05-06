@@ -20,6 +20,7 @@ React frontend plus a lightweight Node.js backend for Red Dot, a Bangladesh adve
 - Vite
 - React Router
 - Node.js
+- MySQL
 
 ## Run
 
@@ -38,10 +39,11 @@ The Vite dev server proxies `/api` requests to `http://localhost:3001`.
 
 ## Notes
 
-- Content is stored by the Node.js backend in `backend/data/content.json`.
+- Content is stored in MySQL by the Node.js backend.
 - Admin authentication is handled by backend-issued bearer tokens.
 - Production secrets should be set from environment variables instead of defaults.
 - On EC2, run the Node API on an internal port such as `3001` and proxy `/api` through Nginx.
+- On first boot, the backend creates the configured database and `site_content` table automatically, then seeds default content if the table is empty.
 
 ## EC2 Deploy
 
@@ -52,6 +54,16 @@ cd /var/www/reddot-app
 git pull
 npm install
 npm run build
+```
+
+Make sure your PM2 env includes the MySQL connection settings:
+
+```bash
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_USER=your_mysql_user
+DB_PASSWORD=your_mysql_password
+DB_NAME=reddot
 ```
 
 2. Start the Node API with PM2:

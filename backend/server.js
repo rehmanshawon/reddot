@@ -1,34 +1,29 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
-import { promises as fs } from "node:fs";
 import http from "node:http";
+import fs from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { defaultContent, demoAdmin } from "../src/data/seedContent.js";
+import { formidable } from "formidable";
+import {
+  closeDatabase,
+  ensureDatabase,
+  isPublicSection,
+  readContent,
+  resetContent,
+  updateContentSection,
+} from "./db.js";
+import { demoAdmin } from "../src/data/seedContent.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const dataDir = path.join(__dirname, "data");
-const contentFile = path.join(dataDir, "content.json");
+
 const PORT = Number(process.env.PORT || 3001);
 const API_ORIGIN = process.env.API_ORIGIN || "http://localhost:5173";
 const AUTH_SECRET = process.env.AUTH_SECRET || "reddot-dev-secret-change-me";
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL || demoAdmin.email;
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || demoAdmin.password;
 const TOKEN_TTL_MS = 1000 * 60 * 60 * 12;
-const publicSections = new Set([
-  "site",
-  "stats",
-  "featuredWorks",
-  "worksArchive",
-  "btsGallery",
-  "about",
-  "leadership",
-  "team",
-]);
-
-function clone(value) {
-  return JSON.parse(JSON.stringify(value));
-}
+const UPLOAD_DIR = path.join(__dirname, "..", "public", "uploads");
 
 function json(res, statusCode, payload, origin) {
   const body = JSON.stringify(payload);
@@ -57,27 +52,6 @@ function getAllowedOrigin(req) {
   return API_ORIGIN;
 }
 
-async function ensureContentFile() {
-  await fs.mkdir(dataDir, { recursive: true });
-
-  try {
-    await fs.access(contentFile);
-  } catch {
-    await fs.writeFile(contentFile, `${JSON.stringify(defaultContent, null, 2)}\n`, "utf8");
-  }
-}
-
-async function readContent() {
-  await ensureContentFile();
-  const file = await fs.readFile(contentFile, "utf8");
-  return JSON.parse(file);
-}
-
-async function writeContent(nextContent) {
-  await ensureContentFile();
-  await fs.writeFile(contentFile, `${JSON.stringify(nextContent, null, 2)}\n`, "utf8");
-}
-
 function sign(payload) {
   return createHmac("sha256", AUTH_SECRET).update(payload).digest("base64url");
 }
@@ -102,13 +76,22 @@ function verifyToken(token) {
   const expected = sign(payload);
 
   try {
-    const validSignature = timingSafeEqual(Buffer.from(signature), Buffer.from(expected));
+    const validSignature = timingSafeEqual(
+      Buffer.from(signature),
+      Buffer.from(expected),
+    );
     if (!validSignature) {
       return null;
     }
 
-    const parsed = JSON.parse(Buffer.from(payload, "base64url").toString("utf8"));
-    if (!parsed.exp || parsed.exp < Date.now() || parsed.email !== ADMIN_EMAIL) {
+    const parsed = JSON.parse(
+      Buffer.from(payload, "base64url").toString("utf8"),
+    );
+    if (
+      !parsed.exp ||
+      parsed.exp < Date.now() ||
+      parsed.email !== ADMIN_EMAIL
+    ) {
       return null;
     }
 
@@ -234,9 +217,41 @@ async function handler(req, res) {
         return;
       }
 
-      const nextContent = clone(defaultContent);
-      await writeContent(nextContent);
-      json(res, 200, { content: nextContent }, origin);
+      const content = await resetContent();
+      json(res, 200, { content }, origin);
+      return;
+    }
+
+    if (req.method === "POST" && url === "/api/upload") {
+      const session = requireAuth(req);
+      if (!session) {
+        unauthorized(res, origin);
+        return;
+      }
+
+      try {
+        const form = formidable({
+          uploadDir: UPLOAD_DIR,
+          keepExtensions: true,
+          maxFileSize: 10 * 1024 * 1024, // 10MB limit
+        });
+
+        const [fields, files] = await form.parse(req);
+        const fileArray = files.file || files.image || files.upload;
+        const uploadedFile = Array.isArray(fileArray)
+          ? fileArray[0]
+          : fileArray;
+
+        if (!uploadedFile) {
+          json(res, 400, { error: "No file provided." }, origin);
+          return;
+        }
+
+        const filename = path.basename(uploadedFile.filepath);
+        json(res, 200, { url: `/uploads/${filename}` }, origin);
+      } catch (err) {
+        json(res, 500, { error: "File upload failed." }, origin);
+      }
       return;
     }
 
@@ -248,7 +263,7 @@ async function handler(req, res) {
       }
 
       const section = getSectionName(url);
-      if (!section || !publicSections.has(section)) {
+      if (!section || !isPublicSection(section)) {
         notFound(res, origin);
         return;
       }
@@ -259,14 +274,8 @@ async function handler(req, res) {
         return;
       }
 
-      const currentContent = await readContent();
-      const nextContent = {
-        ...currentContent,
-        [section]: body.value,
-      };
-
-      await writeContent(nextContent);
-      json(res, 200, { content: nextContent }, origin);
+      const content = await updateContentSection(section, body.value);
+      json(res, 200, { content }, origin);
       return;
     }
 
@@ -276,16 +285,28 @@ async function handler(req, res) {
       res,
       500,
       {
-        error: error instanceof Error ? error.message : "Unexpected server error.",
+        error:
+          error instanceof Error ? error.message : "Unexpected server error.",
       },
       origin,
     );
   }
 }
 
-await ensureContentFile();
+await ensureDatabase();
+await fs.mkdir(UPLOAD_DIR, { recursive: true });
 
 const server = http.createServer(handler);
+
+process.on("SIGINT", async () => {
+  await closeDatabase();
+  server.close(() => process.exit(0));
+});
+
+process.on("SIGTERM", async () => {
+  await closeDatabase();
+  server.close(() => process.exit(0));
+});
 
 server.listen(PORT, () => {
   console.log(`Red Dot API listening on http://localhost:${PORT}`);

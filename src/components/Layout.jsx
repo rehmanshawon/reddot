@@ -1,28 +1,30 @@
-import { NavLink, Outlet } from "react-router-dom";
-import { useAuth } from "../context/AuthContext";
+import { NavLink, Outlet, useLocation } from "react-router-dom";
+import { useTheme } from "../context/ThemeContext";
 
 const navItems = [
-  { label: "Home", to: "/" },
-  { label: "Works", to: "/works" },
+  { label: "HOME", to: "/" },
+  { label: "WORKS", to: "/works" },
   { label: "BTS", to: "/bts" },
-  { label: "About", to: "/about" },
-  { label: "Leadership", to: "/leadership" },
-  { label: "Creative Team", to: "/team" },
+  { label: "SERVICES", to: "/services" },
+  { label: "TEAM", to: "/team" },
+  { label: "ABOUT", to: "/about" },
+  { label: "CONTACT", to: "/contact" },
 ];
 
 export default function Layout() {
-  const { isAuthenticated, logout } = useAuth();
+  const { isDark, toggle } = useTheme();
+  const location = useLocation();
+  const isHome = location.pathname === "/";
 
   return (
-    <div className="site-shell">
-      <div className="site-backdrop" aria-hidden="true" />
-      <header className="topbar">
+    <div className={`site-shell${isHome ? " site-shell--home" : ""}`}>
+      <header className={`topbar${isHome ? " topbar--transparent" : ""}`}>
         <NavLink to="/" className="brandmark">
-          <span className="brandmark__dot" />
-          <span>
-            <strong>Red Dot</strong>
-            <small>Advertising Films</small>
-          </span>
+          <img
+            src={isDark ? "/logo-light.png" : "/logo-dark.png"}
+            alt="RED DOT"
+            className="brandmark__logo"
+          />
         </NavLink>
 
         <nav className="nav">
@@ -30,28 +32,25 @@ export default function Layout() {
             <NavLink
               key={item.to}
               to={item.to}
-              className={({ isActive }) => (isActive ? "nav__link active" : "nav__link")}
+              end={item.to === "/"}
+              className={({ isActive }) =>
+                `nav__link${isActive ? " nav__link--active" : ""}`
+              }
             >
               {item.label}
             </NavLink>
           ))}
         </nav>
 
-        <div className="auth-actions">
-          {isAuthenticated ? (
-            <>
-              <NavLink to="/admin" className="button button--ghost">
-                Admin
-              </NavLink>
-              <button type="button" className="button button--solid" onClick={logout}>
-                Logout
-              </button>
-            </>
-          ) : (
-            <NavLink to="/login" className="button button--solid">
-              Admin Login
-            </NavLink>
-          )}
+        <div className="topbar__actions">
+          <button
+            type="button"
+            className="theme-toggle"
+            onClick={toggle}
+            aria-label={isDark ? "Switch to day mode" : "Switch to dark mode"}
+          >
+            {isDark ? "☀️" : "🌙"}
+          </button>
         </div>
       </header>
 
@@ -61,12 +60,16 @@ export default function Layout() {
 
       <footer className="footer">
         <div>
-          <p className="footer__brand">Red Dot</p>
-          <p>Advertising films for television, YouTube, and Facebook.</p>
+          <img
+            src={isDark ? "/logo-light.png" : "/logo-dark.png"}
+            alt="RED DOT"
+            className="footer__logo"
+          />
+          <p>ADVERTISING FILMS FOR TELEVISION, YOUTUBE, AND FACEBOOK.</p>
         </div>
         <div>
-          <p>Dhaka, Bangladesh</p>
-          <p>hello@reddotfilms.com</p>
+          <p>DHAKA, BANGLADESH</p>
+          <p>HELLO@REDDOTFILMS.COM</p>
         </div>
       </footer>
     </div>

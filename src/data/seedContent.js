@@ -156,7 +156,8 @@ export const defaultContent = {
   btsGallery: [
     {
       id: "bts-1",
-      title: "Set Lighting Build",
+      type: "still",
+      title: "SET LIGHTING BUILD",
       production: "Festival of Flavour",
       description:
         "Pre-lighting a festive kitchen set before the hero food reveal sequence.",
@@ -166,7 +167,8 @@ export const defaultContent = {
     },
     {
       id: "bts-2",
-      title: "Street Unit Rehearsal",
+      type: "still",
+      title: "STREET UNIT REHEARSAL",
       production: "Always On Network",
       description:
         "Camera blocking with motion extras, traffic timing, and handheld movement tests.",
@@ -176,7 +178,8 @@ export const defaultContent = {
     },
     {
       id: "bts-3",
-      title: "Village Dawn Prep",
+      type: "still",
+      title: "VILLAGE DAWN PREP",
       production: "Pure Moments",
       description:
         "A sunrise setup capturing natural mist, practical production design, and early morning stillness.",
@@ -186,7 +189,8 @@ export const defaultContent = {
     },
     {
       id: "bts-4",
-      title: "Wardrobe and Fit Check",
+      type: "still",
+      title: "WARDROBE AND FIT CHECK",
       production: "New Season Style",
       description:
         "Styling boards, wardrobe rails, and final fit checks before the hero runway shot.",
@@ -194,7 +198,179 @@ export const defaultContent = {
         "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=1200&q=80",
       reelUrl: "https://www.youtube.com/embed/ScMzIvxBSi4",
     },
+    {
+      id: "bts-5",
+      type: "video",
+      title: "THE MAKING OF FESTIVAL",
+      production: "Festival of Flavour",
+      description:
+        "Full behind-the-scenes reel showing set construction, lighting rigs, and the director at work.",
+      image:
+        "https://images.unsplash.com/photo-1579165466741-7f35e4755660?auto=format&fit=crop&w=1200&q=80",
+      reelUrl: "https://www.youtube.com/embed/ysz5S6PUM-U",
+    },
+    {
+      id: "bts-6",
+      type: "video",
+      title: "URBAN SHOOT DIARY",
+      production: "Always On Network",
+      description:
+        "Day-in-the-life edit of the city shoot: drone prep, street closures, and cast rehearsals.",
+      image:
+        "https://images.unsplash.com/photo-1536240478700-b869070f9279?auto=format&fit=crop&w=1200&q=80",
+      reelUrl: "https://www.youtube.com/embed/jNQXAC9IVRw",
+    },
   ],
+  services: {
+    videoProduction: {
+      TVC: {
+        title: "TELEVISION COMMERCIALS",
+        description:
+          "High-impact, broadcast-ready TVCs crafted with cinematic precision. From 15-second product spots to 60-second brand narratives, our TVCs are designed to stop the scroll and command attention on every screen size. We handle concept, casting, production design, filming, and final delivery — all under one roof.",
+        gallery: [
+          {
+            id: "tvc-1",
+            title: "FESTIVAL OF FLAVOUR",
+            client: "Pran",
+            platform: "Television",
+            poster:
+              "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=1200&q=80",
+            reelUrl: "https://www.youtube.com/embed/ysz5S6PUM-U",
+          },
+          {
+            id: "tvc-2",
+            title: "PURE MOMENTS",
+            client: "Aarong Dairy",
+            platform: "Television",
+            poster:
+              "https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&w=1200&q=80",
+            reelUrl: "https://www.youtube.com/embed/aqz-KE-bpKQ",
+          },
+          {
+            id: "tvc-3",
+            title: "THE GRAND HOMECOMING",
+            client: "bKash",
+            platform: "Television",
+            poster:
+              "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=1200&q=80",
+            reelUrl: "https://www.youtube.com/embed/aqz-KE-bpKQ",
+          },
+        ],
+      },
+      AV: {
+        title: "AUDIO VISUALS",
+        description:
+          "Corporate AVs and brand films that communicate complex ideas with clarity and visual impact. Whether it's an annual general meeting opening film, a product launch AV, or an internal brand anthem, we bring structure, pacing, and emotional weight to every frame. Our AVs are built for large-format projection and multi-screen environments.",
+        gallery: [
+          {
+            id: "av-1",
+            title: "ALWAYS ON NETWORK",
+            client: "Robi",
+            platform: "Corporate AV",
+            poster:
+              "https://images.unsplash.com/photo-1521737604893-d14cc237f11d?auto=format&fit=crop&w=1200&q=80",
+            reelUrl: "https://www.youtube.com/embed/jNQXAC9IVRw",
+          },
+          {
+            id: "av-2",
+            title: "MOMENTS THAT MATTER",
+            client: "Grameenphone",
+            platform: "Brand Film",
+            poster:
+              "https://images.unsplash.com/photo-1516321497487-e288fb19713f?auto=format&fit=crop&w=1200&q=80",
+            reelUrl: "https://www.youtube.com/embed/jNQXAC9IVRw",
+          },
+        ],
+      },
+      musicVideo: {
+        title: "MUSIC VIDEOS",
+        description:
+          "Visually arresting music videos that amplify the artist's voice and the song's emotional core. We collaborate closely with musicians, labels, and creative directors to build worlds that feel authentic to the track — whether it's a high-energy performance video, a narrative-driven short film, or an experimental visual piece.",
+        gallery: [
+          {
+            id: "mv-1",
+            title: "CITY RUSH",
+            client: "Independent Artist",
+            platform: "YouTube",
+            poster:
+              "https://images.unsplash.com/photo-1489515217757-5fd1be406fef?auto=format&fit=crop&w=1200&q=80",
+            reelUrl: "https://www.youtube.com/embed/ScMzIvxBSi4",
+          },
+          {
+            id: "mv-2",
+            title: "NEW SEASON STYLE",
+            client: "Label Release",
+            platform: "YouTube + TV",
+            poster:
+              "https://images.unsplash.com/photo-1529139574466-a303027c1d8b?auto=format&fit=crop&w=1200&q=80",
+            reelUrl: "https://www.youtube.com/embed/ScMzIvxBSi4",
+          },
+        ],
+      },
+      liveContent: {
+        title: "LIVE CONTENT",
+        description:
+          "Multi-camera live production for concerts, award shows, corporate events, and broadcast specials. Our live team brings real-time direction, switched feeds, and broadcast engineering to every project — ensuring the energy of the moment translates seamlessly to screens at home and in-venue.",
+        gallery: [
+          {
+            id: "lc-1",
+            title: "DRIVE TOMORROW LAUNCH",
+            client: "Runner",
+            platform: "Live Broadcast",
+            poster:
+              "https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=1200&q=80",
+            reelUrl: "https://www.youtube.com/embed/ysz5S6PUM-U",
+          },
+          {
+            id: "lc-2",
+            title: "ALWAYS ON NETWORK LIVE",
+            client: "Robi",
+            platform: "Event Coverage",
+            poster:
+              "https://images.unsplash.com/photo-1521737604893-d14cc237f11d?auto=format&fit=crop&w=1200&q=80",
+            reelUrl: "https://www.youtube.com/embed/jNQXAC9IVRw",
+          },
+        ],
+      },
+      realityTV: {
+        title: "REALITY TV SHOWS",
+        description:
+          "End-to-end reality television production — from format development and contestant casting to multi-week shoots and post-production. We understand the rhythms of reality storytelling: the confessional, the challenge, the elimination, and the human drama that keeps audiences coming back episode after episode.",
+        gallery: [
+          {
+            id: "rt-1",
+            title: "FESTIVAL OF FLAVOUR: THE SERIES",
+            client: "Pran",
+            platform: "Television Series",
+            poster:
+              "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=1200&q=80",
+            reelUrl: "https://www.youtube.com/embed/ysz5S6PUM-U",
+          },
+          {
+            id: "rt-2",
+            title: "CITY RUSH CHALLENGE",
+            client: "Pathao",
+            platform: "Digital Series",
+            poster:
+              "https://images.unsplash.com/photo-1489515217757-5fd1be406fef?auto=format&fit=crop&w=1200&q=80",
+            reelUrl: "https://www.youtube.com/embed/ScMzIvxBSi4",
+          },
+        ],
+      },
+    },
+    postProduction: {
+      title: "POST PRODUCTION",
+      description: "Coming soon.",
+    },
+    event: {
+      title: "EVENT",
+      description: "Coming soon.",
+    },
+    creative: {
+      title: "CREATIVE",
+      description: "Coming soon.",
+    },
+  },
   about: {
     title:
       "A production house built for brands that want memorable commercial storytelling.",
