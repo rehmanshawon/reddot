@@ -24,10 +24,10 @@ export default function HeroVideo() {
 
       {/* Center overlay — only paragraph + scroll */}
       <div className="hero-video__overlay">
-        <p>
+        {/* <p>
           RED DOT crafts premium advertising films for television, YouTube, and
           Facebook.
-        </p>
+        </p> */}
         <span className="hero-video__scroll">SCROLL ↓</span>
       </div>
 
