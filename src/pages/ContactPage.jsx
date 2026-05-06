@@ -164,11 +164,34 @@ export default function ContactPage() {
             title="RED DOT — Level 6, TEAM Building, 29 Kawran Bazar, Dhaka 1215"
           />
         </div>
-        <div className="contact-map__address">
-          <span className="contact-map__pin">🔴</span>
-          <div>
+        <div className="contact-map__overlay">
+          <div className="contact-map__card">
+            <span
+              className="brandmark__dot"
+              style={{
+                width: "16px",
+                height: "16px",
+                display: "inline-block",
+                marginRight: "0.5rem",
+                verticalAlign: "middle",
+              }}
+            ></span>
             <strong>RED DOT</strong>
-            <p>Level 6, TEAM Building, 29 Kawran Bazar, Dhaka 1215</p>
+            <p>Level — 6, TEAM Building</p>
+            <p>29 Kawran Bazar, Dhaka — 1215</p>
+            <a
+              href="https://maps.google.com/?q=23.751839,90.395609"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="button button--solid"
+              style={{
+                marginTop: "0.75rem",
+                fontSize: "0.7rem",
+                padding: "0.5rem 1rem",
+              }}
+            >
+              GET DIRECTIONS ↗
+            </a>
           </div>
         </div>
       </div>
