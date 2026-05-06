@@ -10,6 +10,7 @@ import NotFoundPage from "./pages/NotFoundPage";
 import ServicesPage from "./pages/ServicesPage";
 import TeamPage from "./pages/TeamPage";
 import WorksPage from "./pages/WorksPage";
+import ContactPage from "./pages/ContactPage";
 
 function ProtectedRoute({ children }) {
   const { isAuthenticated, isLoading } = useAuth();
@@ -29,7 +30,7 @@ export default function App() {
         <Route path="/services" element={<ServicesPage />} />
         <Route path="/team" element={<TeamPage />} />
         <Route path="/about" element={<AboutPage />} />
-        <Route path="/contact" element={<NotFoundPage />} />
+        <Route path="/contact" element={<ContactPage />} />
         <Route
           path="/admin"
           element={
