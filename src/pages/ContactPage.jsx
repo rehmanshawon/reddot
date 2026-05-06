@@ -154,15 +154,22 @@ export default function ContactPage() {
         <h3>FIND US ON THE MAP</h3>
         <div className="contact-map__placeholder">
           <iframe
-            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3651.9024000000000!2d90.3910000!3d23.7500000!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3755b80000000000%3A0x0000000000000000!2sKawran%20Bazar%2C%20Dhaka!5e0!3m2!1sen!2sbd!4v1700000000000"
+            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d919.3195148883281!2d90.39560859835947!3d23.75183902170854!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3755b9004f4daf99%3A0xe1bfc1f2860cb290!2sTEAM%20Group%20%7C%20Brand%20Marketing%20%26%20Communication!5e0!3m2!1sen!2sbd!4v1778065981849!5m2!1sen!2sbd"
             width="100%"
             height="400"
             style={{ border: 0 }}
             allowFullScreen=""
             loading="lazy"
             referrerPolicy="no-referrer-when-downgrade"
-            title="RED DOT Office Location"
+            title="RED DOT — Level 6, TEAM Building, 29 Kawran Bazar, Dhaka 1215"
           />
+        </div>
+        <div className="contact-map__address">
+          <span className="contact-map__pin">🔴</span>
+          <div>
+            <strong>RED DOT</strong>
+            <p>Level 6, TEAM Building, 29 Kawran Bazar, Dhaka 1215</p>
+          </div>
         </div>
       </div>
 
