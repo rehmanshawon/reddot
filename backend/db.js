@@ -76,6 +76,10 @@ export async function readContent() {
   return content;
 }
 
+export async function checkDatabaseHealth() {
+  await pool.query("SELECT 1");
+}
+
 export async function updateContentSection(section, value) {
   await pool.query(
     `

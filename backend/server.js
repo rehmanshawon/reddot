@@ -4,7 +4,10 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { formidable } from "formidable";
+import pino from "pino";
+import { z } from "zod";
 import {
+  checkDatabaseHealth,
   closeDatabase,
   ensureDatabase,
   isPublicSection,
@@ -23,6 +26,19 @@ const ADMIN_EMAIL = process.env.ADMIN_EMAIL;
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
 const TOKEN_TTL_MS = 1000 * 60 * 60 * 12;
 const UPLOAD_DIR = path.join(__dirname, "..", "public", "uploads");
+const logger = pino({ level: process.env.LOG_LEVEL || "info" });
+const loginSchema = z.object({
+  email: z.string().email().max(254),
+  password: z.string().min(1).max(512),
+});
+const contentUpdateSchema = z.object({ value: z.unknown() });
+
+class AppError extends Error {
+  constructor(statusCode, message) {
+    super(message);
+    this.statusCode = statusCode;
+  }
+}
 
 function requireEnvironmentVariable(name) {
   if (!process.env[name]) {
@@ -119,7 +135,7 @@ async function readJsonBody(req) {
   try {
     return JSON.parse(Buffer.concat(chunks).toString("utf8"));
   } catch {
-    throw new Error("Invalid JSON body.");
+    throw new AppError(400, "Invalid JSON body.");
   }
 }
 
@@ -154,7 +170,7 @@ function unauthorized(res, origin) {
   json(res, 401, { error: "Unauthorized." }, origin);
 }
 
-async function handler(req, res) {
+export async function handler(req, res) {
   const origin = getAllowedOrigin(req);
   const url = req.url || "/";
 
@@ -172,14 +188,19 @@ async function handler(req, res) {
 
   try {
     if (req.method === "GET" && url === "/api/health") {
-      json(res, 200, { ok: true }, origin);
+      await checkDatabaseHealth();
+      json(res, 200, { ok: true, database: "connected" }, origin);
       return;
     }
 
     if (req.method === "POST" && url === "/api/auth/login") {
-      const body = await readJsonBody(req);
-      const email = String(body.email || "").trim();
-      const password = String(body.password || "");
+      const body = loginSchema.safeParse(await readJsonBody(req));
+      if (!body.success) {
+        throw new AppError(400, "A valid email and password are required.");
+      }
+
+      const email = body.data.email.trim();
+      const password = body.data.password;
 
       if (email !== ADMIN_EMAIL || password !== ADMIN_PASSWORD) {
         json(res, 401, { error: "Invalid email or password." }, origin);
@@ -273,51 +294,61 @@ async function handler(req, res) {
         return;
       }
 
-      const body = await readJsonBody(req);
-      if (!Object.prototype.hasOwnProperty.call(body, "value")) {
-        json(res, 400, { error: "Missing section value." }, origin);
-        return;
+      const body = contentUpdateSchema.safeParse(await readJsonBody(req));
+      if (!body.success) {
+        throw new AppError(400, "Missing section value.");
       }
 
-      const content = await updateContentSection(section, body.value);
+      const content = await updateContentSection(section, body.data.value);
       json(res, 200, { content }, origin);
       return;
     }
 
     notFound(res, origin);
   } catch (error) {
-    json(
-      res,
-      500,
-      {
-        error:
-          error instanceof Error ? error.message : "Unexpected server error.",
-      },
-      origin,
+    const statusCode = error instanceof AppError ? error.statusCode : 500;
+    const message =
+      error instanceof AppError ? error.message : "Unexpected server error.";
+
+    logger.error(
+      { err: error, method: req.method, path: url, statusCode },
+      "API request failed",
     );
+    json(res, statusCode, { error: message }, origin);
   }
 }
 
-requireEnvironmentVariable("AUTH_SECRET");
-requireEnvironmentVariable("ADMIN_EMAIL");
-requireEnvironmentVariable("ADMIN_PASSWORD");
-requireEnvironmentVariable("DB_PASSWORD");
+export function createServer() {
+  return http.createServer(handler);
+}
 
-await ensureDatabase();
-await fs.mkdir(UPLOAD_DIR, { recursive: true });
+export async function startServer() {
+  requireEnvironmentVariable("AUTH_SECRET");
+  requireEnvironmentVariable("ADMIN_EMAIL");
+  requireEnvironmentVariable("ADMIN_PASSWORD");
+  requireEnvironmentVariable("DB_PASSWORD");
 
-const server = http.createServer(handler);
+  await ensureDatabase();
+  await fs.mkdir(UPLOAD_DIR, { recursive: true });
 
-process.on("SIGINT", async () => {
-  await closeDatabase();
-  server.close(() => process.exit(0));
-});
+  const server = createServer();
+  server.listen(PORT, () => {
+    logger.info({ port: PORT }, "Red Dot API listening");
+  });
 
-process.on("SIGTERM", async () => {
-  await closeDatabase();
-  server.close(() => process.exit(0));
-});
+  return server;
+}
 
-server.listen(PORT, () => {
-  console.log(`Red Dot API listening on http://localhost:${PORT}`);
-});
+if (process.argv[1] && path.resolve(process.argv[1]) === __filename) {
+  const server = await startServer();
+
+  process.on("SIGINT", async () => {
+    await closeDatabase();
+    server.close(() => process.exit(0));
+  });
+
+  process.on("SIGTERM", async () => {
+    await closeDatabase();
+    server.close(() => process.exit(0));
+  });
+}
