@@ -1,4 +1,4 @@
-name: Deploy to AWS EC2
+name: Deploy Red Dot
 
 on:
   push:
@@ -6,22 +6,78 @@ on:
       - main
 
 jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Test
+        run: npm test
+
+      - name: Build
+        run: npm run build
+
+  build-and-push:
+    needs: validate
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Sign in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build and push frontend
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          target: frontend
+          push: true
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/reddot-frontend:latest
+
+      - name: Build and push API
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          target: api
+          push: true
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/reddot-api:latest
+
   deploy:
+    needs: build-and-push
     runs-on: ubuntu-latest
 
     steps:
       - name: Deploy via SSH
         uses: appleboy/ssh-action@v1.0.3
         with:
-          host: ec2-13-127-219-128.ap-south-1.compute.amazonaws.com
-          username: ubuntu
-          key: ${{ secrets.AWS_SSH_KEY }}
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USERNAME }}
+          key: ${{ secrets.EC2_SSH_KEY }}
           port: 22
           script: |
-            cd /var/www/reddot-app
+            echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
+            cd /home/ubuntu/apps/reddot
             git pull origin main
-            npm install
-            npm run build
-            pm2 restart reddot-api || pm2 start ecosystem.config.cjs
-            sudo nginx -t && sudo systemctl reload nginx
-            echo "✅ Deployment complete at $(date)"
+            docker compose pull frontend api
+            docker compose up -d --force-recreate
+            docker image prune -f

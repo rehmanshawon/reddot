@@ -1,6 +1,6 @@
 # Red Dot
 
-React frontend plus a lightweight Node.js backend for Red Dot, a Bangladesh advertising film agency.
+React frontend plus a Node.js API for Red Dot, a Bangladesh advertising film agency. The production stack runs in Docker with PostgreSQL.
 
 ## Included
 
@@ -13,6 +13,8 @@ React frontend plus a lightweight Node.js backend for Red Dot, a Bangladesh adve
 - Creative team page
 - Admin login/logout
 - Admin dashboard with editable persisted content
+- PostgreSQL-backed content storage
+- Docker Compose deployment and GitHub Actions delivery
 
 ## Tech
 
@@ -20,22 +22,30 @@ React frontend plus a lightweight Node.js backend for Red Dot, a Bangladesh adve
 - Vite
 - React Router
 - Node.js
-- MySQL
+- PostgreSQL
+- Docker Compose
 
 ## Run
 
 ```bash
 npm install
+npm run lint
+npm test
+npm run build
+```
+
+Copy `.env.example` to `.env`, replace every placeholder value, then start the API and Vite development server in separate terminals:
+
+```bash
 npm run server
 npm run dev
 ```
 
-The Vite dev server proxies `/api` requests to `http://localhost:3001`.
+The Vite development server proxies `/api` requests to `http://localhost:3001`. A local PostgreSQL database must exist with the settings defined in `.env`.
 
-## Demo Admin Credentials
+## Admin credentials
 
-- Email: `admin@reddot.local`
-- Password: `reddot-admin`
+Set `ADMIN_EMAIL`, `ADMIN_PASSWORD`, and `AUTH_SECRET` in your local `.env` file before starting the API. These values are never committed to the repository.
 
 ## Notes
 
@@ -45,44 +55,75 @@ The Vite dev server proxies `/api` requests to `http://localhost:3001`.
 - On EC2, run the Node API on an internal port such as `3001` and proxy `/api` through Nginx.
 - On first boot, the backend creates the configured database and `site_content` table automatically, then seeds default content if the table is empty.
 
-## EC2 Deploy
+## Docker deployment
 
-1. Pull the latest code onto the server:
+Docker Compose runs the following services:
 
-```bash
-cd /var/www/reddot-app
-git pull
-npm install
-npm run build
+- `frontend`: Nginx serving the Vite production build on host port `8082`.
+- `api`: private Node.js content API.
+- `db`: private PostgreSQL 16 database with a persistent volume.
+
+Create a production `.env` file that is never committed:
+
+```dotenv
+DOCKERHUB_USERNAME=your-dockerhub-user
+API_ORIGIN=https://www.reddot.com.bd
+AUTH_SECRET=generate-a-long-random-secret
+ADMIN_EMAIL=admin@example.com
+ADMIN_PASSWORD=use-a-unique-strong-password
+DB_PASSWORD=use-a-unique-strong-password
 ```
 
-Make sure your PM2 env includes the MySQL connection settings:
+Build and run the stack locally:
 
 ```bash
-DB_HOST=127.0.0.1
-DB_PORT=3306
-DB_USER=your_mysql_user
-DB_PASSWORD=your_mysql_password
-DB_NAME=reddot
+docker compose up --build -d
+docker compose ps
+curl http://127.0.0.1:8082/api/health
 ```
 
-2. Start the Node API with PM2:
+Uploaded media is stored in the named `uploads` volume and survives container recreation. PostgreSQL data is stored in the named `postgres-data` volume.
+
+## EC2 deployment
+
+1. Install Docker Engine, Docker Compose plugin, Git, Nginx, and Certbot on the EC2 host.
+2. Create the application directory and clone the repository:
 
 ```bash
-pm2 start ecosystem.config.cjs
-pm2 save
+mkdir -p /home/ubuntu/apps
+cd /home/ubuntu/apps
+git clone git@github.com:rehmanshawon/reddot.git reddot
+cd reddot
 ```
 
-3. Copy the Nginx example config from `deploy/nginx.reddot.ilogicmagic.com.conf` into your active site config, then reload Nginx:
+3. Create `/home/ubuntu/apps/reddot/.env` with the production values shown above.
+4. Install [deploy/nginx.reddot.com.bd.conf](deploy/nginx.reddot.com.bd.conf) as `/etc/nginx/sites-available/reddot.com.bd`, enable it, and validate Nginx:
 
 ```bash
+sudo ln -s /etc/nginx/sites-available/reddot.com.bd /etc/nginx/sites-enabled/reddot.com.bd
 sudo nginx -t
 sudo systemctl reload nginx
 ```
 
-4. Verify:
+5. After `reddot.com.bd` and `www.reddot.com.bd` resolve to this EC2 instance, obtain the TLS certificate:
 
 ```bash
-curl -I https://reddot.ilogicmagic.com
-curl https://reddot.ilogicmagic.com/api/health
+sudo certbot --nginx -d reddot.com.bd -d www.reddot.com.bd
+```
+
+6. Add these GitHub repository secrets before pushing to `main`:
+
+- `DOCKERHUB_USERNAME`
+- `DOCKERHUB_TOKEN`
+- `EC2_HOST`
+- `EC2_USERNAME`
+- `EC2_SSH_KEY`
+
+The deployment workflow builds and publishes the frontend/API images, then pulls and recreates the EC2 stack at `/home/ubuntu/apps/reddot`.
+
+Verify the deployed site:
+
+```bash
+curl -I https://www.reddot.com.bd
+curl https://www.reddot.com.bd/api/health
 ```

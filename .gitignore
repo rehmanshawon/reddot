@@ -1,8 +1,11 @@
 node_modules
 dist
+coverage
+.vite
 .env
 .DS_Store
 backend/data/content.json
+public/uploads/
 
 # Large media files (upload directly to server)
 public/hero-reel.mp4
