@@ -47,7 +47,10 @@ export default function StatsEditor() {
     setIsSaving(true);
     try {
       // Clean up the local IDs before saving to keep the database JSON clean
-      const cleanItems = items.map(({ id, ...rest }) => rest);
+      const cleanItems = items.map((item) => ({
+        label: item.label,
+        value: item.value,
+      }));
       await saveSection(sectionName, cleanItems);
       alert("Stats saved successfully!");
     } catch (error) {

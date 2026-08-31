@@ -31,17 +31,17 @@ export default function App() {
         <Route path="/team" element={<TeamPage />} />
         <Route path="/about" element={<AboutPage />} />
         <Route path="/contact" element={<ContactPage />} />
-        <Route
-          path="/admin"
-          element={
-            <ProtectedRoute>
-              <AdminPage />
-            </ProtectedRoute>
-          }
-        />
         <Route path="*" element={<NotFoundPage />} />
       </Route>
 
+      <Route
+        path="/admin"
+        element={
+          <ProtectedRoute>
+            <AdminPage />
+          </ProtectedRoute>
+        }
+      />
       {/* Login route — outside main Layout, no nav/footer */}
       <Route path="/login" element={<LoginPage />} />
     </Routes>

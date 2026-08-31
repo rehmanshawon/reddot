@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import SectionHeader from "../components/SectionHeader";
 import { useAuth } from "../context/AuthContext";
 import { useContent } from "../context/ContentContext";
 import WorksEditor from "../lib/WorksEditor";
@@ -97,193 +96,207 @@ export default function AdminPage() {
 
   if (isLoading) {
     return (
-      <section className="section admin-layout">
-        <SectionHeader
-          eyebrow="Admin Studio"
-          title="Update website content from one dashboard"
-          text="Loading saved content from the backend."
-        />
-      </section>
+      <main className="admin-studio admin-studio--loading">
+        <p>Loading Red Dot content...</p>
+      </main>
     );
   }
 
   return (
-    <section className="section admin-layout">
-      <div className="admin-header">
-        <div>
-          <p className="section-header__eyebrow">ADMIN STUDIO</p>
-          <h2>Content Dashboard</h2>
-          <p>
-            Logged in as <strong>{user?.email}</strong>
-          </p>
+    <main className="admin-studio">
+      <aside className="admin-sidebar">
+        <a className="admin-brand" href="/">
+          RED DOT <span>Studio</span>
+        </a>
+        <nav className="admin-sidebar__nav" aria-label="Content sections">
+          <a href="#overview">Overview</a>
+          <a href="#homepage">Homepage</a>
+          <a href="#about">About</a>
+          <a href="#portfolio">Portfolio</a>
+          <a href="#people">People</a>
+        </nav>
+        <div className="admin-sidebar__footer">
+          <a href="/" target="_blank" rel="noreferrer">
+            View website
+          </a>
+          <button type="button" onClick={logout}>
+            Sign out
+          </button>
         </div>
-        <button
-          type="button"
-          className="button button--ghost"
-          onClick={logout}
-          style={{ color: "var(--red)", borderColor: "var(--red)" }}
-        >
-          LOGOUT
-        </button>
-      </div>
-      <SectionHeader
-        eyebrow="Admin Studio"
-        title="Update website content from one dashboard"
-        text="These edits now save through the Node.js backend, so the live website can stay in sync with the admin dashboard."
-      />
+      </aside>
 
-      <div className="admin-grid">
-        <div className="panel">
-          <h3>Homepage copy</h3>
-          <div className="admin-form">
-            <InputField
-              label="Hero tag"
-              value={siteDraft.heroTag}
-              onChange={(value) =>
-                setSiteDraft((current) => ({ ...current, heroTag: value }))
-              }
-            />
+      <section className="admin-workspace">
+        <header className="admin-header" id="overview">
+          <div>
+            <p className="admin-kicker">Content management</p>
+            <h1>Red Dot Studio</h1>
+            <p>Manage the live editorial content for Red Dot.</p>
+          </div>
+          <div className="admin-user">
+            <span>Signed in as</span>
+            <strong>{user?.email}</strong>
+          </div>
+        </header>
+
+        <div className="admin-grid">
+          <div className="panel" id="homepage">
+            <h3>Homepage copy</h3>
+            <div className="admin-form">
+              <InputField
+                label="Hero tag"
+                value={siteDraft.heroTag}
+                onChange={(value) =>
+                  setSiteDraft((current) => ({ ...current, heroTag: value }))
+                }
+              />
+              <TextareaField
+                label="Hero title"
+                value={siteDraft.heroTitle}
+                onChange={(value) =>
+                  setSiteDraft((current) => ({ ...current, heroTitle: value }))
+                }
+                rows={3}
+              />
+              <TextareaField
+                label="Hero text"
+                value={siteDraft.heroText}
+                onChange={(value) =>
+                  setSiteDraft((current) => ({ ...current, heroText: value }))
+                }
+                rows={5}
+              />
+              <TextareaField
+                label="Agency intro"
+                value={siteDraft.agencyIntro}
+                onChange={(value) =>
+                  setSiteDraft((current) => ({
+                    ...current,
+                    agencyIntro: value,
+                  }))
+                }
+                rows={4}
+              />
+              <button
+                type="button"
+                className="button button--solid"
+                disabled={isSaving}
+                onClick={() =>
+                  saveSectionValue("site", siteDraft, "Homepage copy")
+                }
+              >
+                Save homepage copy
+              </button>
+            </div>
+          </div>
+
+          <div className="panel" id="about">
+            <h3>About page copy</h3>
+            <div className="admin-form">
+              <TextareaField
+                label="About title"
+                value={aboutDraft.title}
+                onChange={(value) =>
+                  setAboutDraft((current) => ({ ...current, title: value }))
+                }
+                rows={3}
+              />
+              <TextareaField
+                label="About description"
+                value={aboutDraft.description}
+                onChange={(value) =>
+                  setAboutDraft((current) => ({
+                    ...current,
+                    description: value,
+                  }))
+                }
+                rows={6}
+              />
+              <TextareaField
+                label="Service points (one per line)"
+                value={aboutDraft.points.join("\n")}
+                onChange={(value) =>
+                  setAboutDraft((current) => ({
+                    ...current,
+                    points: value
+                      .split("\n")
+                      .map((item) => item.trim())
+                      .filter(Boolean),
+                  }))
+                }
+                rows={5}
+              />
+              <button
+                type="button"
+                className="button button--solid"
+                disabled={isSaving}
+                onClick={() =>
+                  saveSectionValue("about", aboutDraft, "About copy")
+                }
+              >
+                Save about copy
+              </button>
+            </div>
+          </div>
+
+          <div className="admin-collections" id="portfolio">
+            <WorksEditor sectionName="featuredWorks" />
+            <WorksEditor sectionName="worksArchive" />
+            <BtsEditor />
+            <StatsEditor />
+          </div>
+
+          <div className="panel" id="people">
+            <h3>Leadership JSON</h3>
             <TextareaField
-              label="Hero title"
-              value={siteDraft.heroTitle}
-              onChange={(value) =>
-                setSiteDraft((current) => ({ ...current, heroTitle: value }))
-              }
-              rows={3}
-            />
-            <TextareaField
-              label="Hero text"
-              value={siteDraft.heroText}
-              onChange={(value) =>
-                setSiteDraft((current) => ({ ...current, heroText: value }))
-              }
-              rows={5}
-            />
-            <TextareaField
-              label="Agency intro"
-              value={siteDraft.agencyIntro}
-              onChange={(value) =>
-                setSiteDraft((current) => ({ ...current, agencyIntro: value }))
-              }
-              rows={4}
+              label="Leadership profiles"
+              value={leadershipDraft}
+              onChange={setLeadershipDraft}
+              rows={16}
             />
             <button
               type="button"
               className="button button--solid"
               disabled={isSaving}
               onClick={() =>
-                saveSectionValue("site", siteDraft, "Homepage copy")
+                saveJsonSection("leadership", leadershipDraft, "Leadership")
               }
             >
-              Save homepage copy
+              Save leadership
             </button>
           </div>
-        </div>
 
-        <div className="panel">
-          <h3>About page copy</h3>
-          <div className="admin-form">
+          <div className="panel">
+            <h3>Creative team JSON</h3>
             <TextareaField
-              label="About title"
-              value={aboutDraft.title}
-              onChange={(value) =>
-                setAboutDraft((current) => ({ ...current, title: value }))
-              }
-              rows={3}
-            />
-            <TextareaField
-              label="About description"
-              value={aboutDraft.description}
-              onChange={(value) =>
-                setAboutDraft((current) => ({ ...current, description: value }))
-              }
-              rows={6}
-            />
-            <TextareaField
-              label="Service points (one per line)"
-              value={aboutDraft.points.join("\n")}
-              onChange={(value) =>
-                setAboutDraft((current) => ({
-                  ...current,
-                  points: value
-                    .split("\n")
-                    .map((item) => item.trim())
-                    .filter(Boolean),
-                }))
-              }
-              rows={5}
+              label="Team members"
+              value={teamDraft}
+              onChange={setTeamDraft}
+              rows={16}
             />
             <button
               type="button"
               className="button button--solid"
               disabled={isSaving}
-              onClick={() =>
-                saveSectionValue("about", aboutDraft, "About copy")
-              }
+              onClick={() => saveJsonSection("team", teamDraft, "Team")}
             >
-              Save about copy
+              Save team
             </button>
           </div>
         </div>
 
-        <div style={{ gridColumn: "1 / -1" }}>
-          <WorksEditor sectionName="featuredWorks" />
-          <WorksEditor sectionName="worksArchive" />
-          <BtsEditor />
-          <StatsEditor />
-        </div>
-
-        <div className="panel">
-          <h3>Leadership JSON</h3>
-          <TextareaField
-            label="Leadership profiles"
-            value={leadershipDraft}
-            onChange={setLeadershipDraft}
-            rows={16}
-          />
+        <div className="admin-actions">
           <button
             type="button"
-            className="button button--solid"
+            className="button button--ghost"
             disabled={isSaving}
-            onClick={() =>
-              saveJsonSection("leadership", leadershipDraft, "Leadership")
-            }
+            onClick={resetAllContent}
           >
-            Save leadership
+            Reset sample content
           </button>
+          {status ? <p className="admin-status">{status}</p> : null}
+          {!status && error ? <p className="admin-status">{error}</p> : null}
         </div>
-
-        <div className="panel">
-          <h3>Creative team JSON</h3>
-          <TextareaField
-            label="Team members"
-            value={teamDraft}
-            onChange={setTeamDraft}
-            rows={16}
-          />
-          <button
-            type="button"
-            className="button button--solid"
-            disabled={isSaving}
-            onClick={() => saveJsonSection("team", teamDraft, "Team")}
-          >
-            Save team
-          </button>
-        </div>
-      </div>
-
-      <div className="admin-actions">
-        <button
-          type="button"
-          className="button button--ghost"
-          disabled={isSaving}
-          onClick={resetAllContent}
-        >
-          Reset sample content
-        </button>
-        {status ? <p className="admin-status">{status}</p> : null}
-        {!status && error ? <p className="admin-status">{error}</p> : null}
-      </div>
-    </section>
+      </section>
+    </main>
   );
 }
