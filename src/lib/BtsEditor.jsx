@@ -1,25 +1,17 @@
-import { useState, useEffect } from "react";
-import { useContent } from "../context/ContentContext";
+import { useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import { uploadFile } from "./api";
+import useSectionEditor from "./useSectionEditor";
 
 export default function BtsEditor() {
   const sectionName = "btsGallery";
-  const { content, saveSection } = useContent();
   const { token } = useAuth();
-
-  const [items, setItems] = useState([]);
-  const [isSaving, setIsSaving] = useState(false);
+  const { addItem, isSaving, items, removeItem, saveItems, updateItem } =
+    useSectionEditor(sectionName);
   const [uploadingId, setUploadingId] = useState(null);
 
-  useEffect(() => {
-    if (content && content[sectionName]) {
-      setItems(content[sectionName]);
-    }
-  }, [content]);
-
   const handleAdd = () => {
-    setItems([
+    addItem(
       {
         id: `bts-${Date.now()}`,
         type: "still",
@@ -29,22 +21,18 @@ export default function BtsEditor() {
         image: "",
         reelUrl: "",
       },
-      ...items,
-    ]);
+      "start",
+    );
   };
 
   const handleRemove = (id) => {
     if (window.confirm("Are you sure you want to remove this item?")) {
-      setItems(items.filter((item) => item.id !== id));
+      removeItem(id);
     }
   };
 
   const handleChange = (id, field, value) => {
-    setItems(
-      items.map((item) =>
-        item.id === id ? { ...item, [field]: value } : item,
-      ),
-    );
+    updateItem(id, field, value);
   };
 
   const handleUpload = async (id, file) => {
@@ -61,14 +49,11 @@ export default function BtsEditor() {
   };
 
   const handleSave = async () => {
-    setIsSaving(true);
     try {
-      await saveSection(sectionName, items);
+      await saveItems();
       alert("BTS Gallery saved successfully!");
     } catch (error) {
       alert("Failed to save: " + error.message);
-    } finally {
-      setIsSaving(false);
     }
   };
 

@@ -1,62 +1,44 @@
-import { useState, useEffect } from "react";
-import { useContent } from "../context/ContentContext";
+import useSectionEditor from "./useSectionEditor";
+
+function mapStats(contentItems) {
+  return contentItems.map((item, index) => ({
+    ...item,
+    id: item.id || `stat-${index}-${Date.now()}`,
+  }));
+}
 
 export default function StatsEditor() {
   const sectionName = "stats";
-  const { content, saveSection } = useContent();
-
-  const [items, setItems] = useState([]);
-  const [isSaving, setIsSaving] = useState(false);
-
-  useEffect(() => {
-    if (content && content[sectionName]) {
-      // Add a local ID for React mapping since the seed JSON array doesn't have IDs for stats
-      setItems(
-        content[sectionName].map((item, index) => ({
-          ...item,
-          id: item.id || `stat-${index}-${Date.now()}`,
-        })),
-      );
-    }
-  }, [content]);
+  const { addItem, isSaving, items, removeItem, saveItems, updateItem } =
+    useSectionEditor(sectionName, mapStats);
 
   const handleAdd = () => {
-    setItems([
-      ...items,
-      {
-        id: `stat-${Date.now()}`,
-        label: "New Stat",
-        value: "100+",
-      },
-    ]);
+    addItem({
+      id: `stat-${Date.now()}`,
+      label: "New Stat",
+      value: "100+",
+    });
   };
 
   const handleRemove = (id) => {
-    setItems(items.filter((item) => item.id !== id));
+    removeItem(id);
   };
 
   const handleChange = (id, field, value) => {
-    setItems(
-      items.map((item) =>
-        item.id === id ? { ...item, [field]: value } : item,
-      ),
-    );
+    updateItem(id, field, value);
   };
 
   const handleSave = async () => {
-    setIsSaving(true);
     try {
       // Clean up the local IDs before saving to keep the database JSON clean
       const cleanItems = items.map((item) => ({
         label: item.label,
         value: item.value,
       }));
-      await saveSection(sectionName, cleanItems);
+      await saveItems(cleanItems);
       alert("Stats saved successfully!");
     } catch (error) {
       alert("Failed to save: " + error.message);
-    } finally {
-      setIsSaving(false);
     }
   };
 

@@ -1,23 +1,14 @@
-import { useState, useEffect } from "react";
-import { useContent } from "../context/ContentContext";
+import { useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import { uploadFile } from "../lib/api";
+import useSectionEditor from "./useSectionEditor";
 
 export default function WorksEditor({ sectionName = "featuredWorks" }) {
-  const { content, saveSection } = useContent();
   const { token } = useAuth();
-
-  const [items, setItems] = useState([]);
-  const [isSaving, setIsSaving] = useState(false);
+  const { isSaving, items, removeItem, saveItems, updateItem } =
+    useSectionEditor(sectionName);
   const [uploadingId, setUploadingId] = useState(null);
   const [newItem, setNewItem] = useState(null);
-
-  // Sync with global content state on mount
-  useEffect(() => {
-    if (content && content[sectionName]) {
-      setItems(content[sectionName]);
-    }
-  }, [content, sectionName]);
 
   const handleAdd = () => {
     setNewItem({
@@ -38,30 +29,23 @@ export default function WorksEditor({ sectionName = "featuredWorks" }) {
   };
 
   const handleAddNewSave = async () => {
-    setIsSaving(true);
     try {
       const updatedItems = [newItem, ...items];
-      await saveSection(sectionName, updatedItems);
+      await saveItems(updatedItems);
       setNewItem(null);
     } catch (error) {
       alert("Failed to add new item: " + error.message);
-    } finally {
-      setIsSaving(false);
     }
   };
 
   const handleRemove = (id) => {
     if (window.confirm("Are you sure you want to remove this item?")) {
-      setItems(items.filter((item) => item.id !== id));
+      removeItem(id);
     }
   };
 
   const handleChange = (id, field, value) => {
-    setItems(
-      items.map((item) =>
-        item.id === id ? { ...item, [field]: value } : item,
-      ),
-    );
+    updateItem(id, field, value);
   };
 
   const handleUpload = async (id, file) => {
@@ -91,16 +75,13 @@ export default function WorksEditor({ sectionName = "featuredWorks" }) {
   };
 
   const handleSave = async () => {
-    setIsSaving(true);
     try {
-      await saveSection(sectionName, items);
+      await saveItems();
       alert(
         `${sectionName === "featuredWorks" ? "Featured Works" : "Works Archive"} saved successfully!`,
       );
     } catch (error) {
       alert("Failed to save: " + error.message);
-    } finally {
-      setIsSaving(false);
     }
   };
 
