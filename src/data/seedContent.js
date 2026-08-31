@@ -454,13 +454,3 @@ export const defaultContent = {
     },
   ],
 };
-
-export const demoAdmin = {
-  email: "admin@reddot.local",
-  password: "reddot-admin",
-};
-
-export const seedContent = {
-  ...defaultContent,
-  admin: demoAdmin,
-};

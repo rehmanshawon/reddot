@@ -1,10 +1,10 @@
-import mysql from "mysql2/promise";
+import pg from "pg";
 import { defaultContent } from "../src/data/seedContent.js";
 
 const DB_HOST = process.env.DB_HOST || "127.0.0.1";
-const DB_PORT = Number(process.env.DB_PORT || 3306);
-const DB_USER = process.env.DB_USER || "root";
-const DB_PASSWORD = process.env.DB_PASSWORD || "your_actual_password_here";
+const DB_PORT = Number(process.env.DB_PORT || 5432);
+const DB_USER = process.env.DB_USER || "reddot";
+const DB_PASSWORD = process.env.DB_PASSWORD;
 const DB_NAME = process.env.DB_NAME || "reddot";
 const publicSections = [
   "site",
@@ -17,19 +17,15 @@ const publicSections = [
   "team",
 ];
 
-function createPool() {
-  return mysql.createPool({
-    host: DB_HOST,
-    port: DB_PORT,
-    user: DB_USER,
-    password: DB_PASSWORD,
-    database: DB_NAME,
-    waitForConnections: true,
-    connectionLimit: 10,
-  });
-}
-
-const pool = createPool();
+const { Pool } = pg;
+const pool = new Pool({
+  host: DB_HOST,
+  port: DB_PORT,
+  user: DB_USER,
+  password: DB_PASSWORD,
+  database: DB_NAME,
+  max: 10,
+});
 
 function serialize(value) {
   return JSON.stringify(value);
@@ -40,31 +36,16 @@ function deserialize(value) {
 }
 
 export async function ensureDatabase() {
-  const adminConnection = await mysql.createConnection({
-    host: DB_HOST,
-    port: DB_PORT,
-    user: DB_USER,
-    password: DB_PASSWORD,
-  });
-
-  try {
-    await adminConnection.query(
-      `CREATE DATABASE IF NOT EXISTS \`${DB_NAME.replace(/`/g, "``")}\` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci`,
-    );
-  } finally {
-    await adminConnection.end();
-  }
-
   await pool.query(`
     CREATE TABLE IF NOT EXISTS site_content (
       section_name VARCHAR(64) NOT NULL PRIMARY KEY,
-      content_json LONGTEXT NOT NULL,
-      created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-      updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+      content_json TEXT NOT NULL,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
     )
   `);
 
-  const [rows] = await pool.query("SELECT section_name FROM site_content");
+  const { rows } = await pool.query("SELECT section_name FROM site_content");
   const existingSections = new Set(rows.map((row) => row.section_name));
 
   for (const section of publicSections) {
@@ -73,14 +54,14 @@ export async function ensureDatabase() {
     }
 
     await pool.query(
-      "INSERT INTO site_content (section_name, content_json) VALUES (?, ?)",
+      "INSERT INTO site_content (section_name, content_json) VALUES ($1, $2)",
       [section, serialize(defaultContent[section])],
     );
   }
 }
 
 export async function readContent() {
-  const [rows] = await pool.query(
+  const { rows } = await pool.query(
     "SELECT section_name, content_json FROM site_content ORDER BY section_name",
   );
 
@@ -99,8 +80,9 @@ export async function updateContentSection(section, value) {
   await pool.query(
     `
       INSERT INTO site_content (section_name, content_json)
-      VALUES (?, ?)
-      ON DUPLICATE KEY UPDATE content_json = VALUES(content_json)
+      VALUES ($1, $2)
+      ON CONFLICT (section_name)
+      DO UPDATE SET content_json = EXCLUDED.content_json, updated_at = CURRENT_TIMESTAMP
     `,
     [section, serialize(value)],
   );
@@ -109,22 +91,22 @@ export async function updateContentSection(section, value) {
 }
 
 export async function resetContent() {
-  const connection = await pool.getConnection();
+  const connection = await pool.connect();
 
   try {
-    await connection.beginTransaction();
+    await connection.query("BEGIN");
     await connection.query("DELETE FROM site_content");
 
     for (const section of publicSections) {
       await connection.query(
-        "INSERT INTO site_content (section_name, content_json) VALUES (?, ?)",
+        "INSERT INTO site_content (section_name, content_json) VALUES ($1, $2)",
         [section, serialize(defaultContent[section])],
       );
     }
 
-    await connection.commit();
+    await connection.query("COMMIT");
   } catch (error) {
-    await connection.rollback();
+    await connection.query("ROLLBACK");
     throw error;
   } finally {
     connection.release();

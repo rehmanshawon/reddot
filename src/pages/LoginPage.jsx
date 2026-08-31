@@ -57,7 +57,7 @@ export default function LoginPage() {
                   email: event.target.value,
                 }))
               }
-              placeholder="admin@reddot.local"
+              placeholder="admin@example.com"
               autoComplete="email"
             />
           </label>
@@ -72,7 +72,7 @@ export default function LoginPage() {
                   password: event.target.value,
                 }))
               }
-              placeholder="••••••••"
+              placeholder="Enter your password"
               autoComplete="current-password"
             />
           </label>

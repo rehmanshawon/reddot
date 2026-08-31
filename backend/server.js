@@ -12,18 +12,23 @@ import {
   resetContent,
   updateContentSection,
 } from "./db.js";
-import { demoAdmin } from "../src/data/seedContent.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const PORT = Number(process.env.PORT || 3001);
 const API_ORIGIN = process.env.API_ORIGIN || "http://localhost:5173";
-const AUTH_SECRET = process.env.AUTH_SECRET || "reddot-dev-secret-change-me";
-const ADMIN_EMAIL = process.env.ADMIN_EMAIL || demoAdmin.email;
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || demoAdmin.password;
+const AUTH_SECRET = process.env.AUTH_SECRET;
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL;
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
 const TOKEN_TTL_MS = 1000 * 60 * 60 * 12;
 const UPLOAD_DIR = path.join(__dirname, "..", "public", "uploads");
+
+function requireEnvironmentVariable(name) {
+  if (!process.env[name]) {
+    throw new Error(`${name} must be set before starting the Red Dot API.`);
+  }
+}
 
 function json(res, statusCode, payload, origin) {
   const body = JSON.stringify(payload);
@@ -236,7 +241,7 @@ async function handler(req, res) {
           maxFileSize: 10 * 1024 * 1024, // 10MB limit
         });
 
-        const [fields, files] = await form.parse(req);
+        const [, files] = await form.parse(req);
         const fileArray = files.file || files.image || files.upload;
         const uploadedFile = Array.isArray(fileArray)
           ? fileArray[0]
@@ -249,7 +254,7 @@ async function handler(req, res) {
 
         const filename = path.basename(uploadedFile.filepath);
         json(res, 200, { url: `/uploads/${filename}` }, origin);
-      } catch (err) {
+      } catch {
         json(res, 500, { error: "File upload failed." }, origin);
       }
       return;
@@ -292,6 +297,11 @@ async function handler(req, res) {
     );
   }
 }
+
+requireEnvironmentVariable("AUTH_SECRET");
+requireEnvironmentVariable("ADMIN_EMAIL");
+requireEnvironmentVariable("ADMIN_PASSWORD");
+requireEnvironmentVariable("DB_PASSWORD");
 
 await ensureDatabase();
 await fs.mkdir(UPLOAD_DIR, { recursive: true });
