@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { useAuth } from "../context/AuthContext";
+import EditorStatus from "../components/EditorStatus";
 import { uploadFile } from "./api";
+import { captureException } from "./errorReporting";
 import useSectionEditor from "./useSectionEditor";
 
 export default function BtsEditor() {
@@ -9,6 +11,7 @@ export default function BtsEditor() {
   const { addItem, isSaving, items, removeItem, saveItems, updateItem } =
     useSectionEditor(sectionName);
   const [uploadingId, setUploadingId] = useState(null);
+  const [status, setStatus] = useState(null);
 
   const handleAdd = () => {
     addItem(
@@ -42,7 +45,8 @@ export default function BtsEditor() {
       const response = await uploadFile(file, token);
       handleChange(id, "image", response.url);
     } catch (error) {
-      alert("Upload failed: " + error.message);
+      captureException(error, { action: "upload-bts-image" });
+      setStatus({ type: "error", message: "Upload failed: " + error.message });
     } finally {
       setUploadingId(null);
     }
@@ -51,9 +55,13 @@ export default function BtsEditor() {
   const handleSave = async () => {
     try {
       await saveItems();
-      alert("BTS Gallery saved successfully!");
+      setStatus({
+        type: "success",
+        message: "BTS Gallery saved successfully!",
+      });
     } catch (error) {
-      alert("Failed to save: " + error.message);
+      captureException(error, { action: "save-bts-gallery" });
+      setStatus({ type: "error", message: "Failed to save: " + error.message });
     }
   };
 
@@ -95,6 +103,8 @@ export default function BtsEditor() {
           </button>
         </div>
       </div>
+
+      <EditorStatus status={status} />
 
       <div style={{ display: "flex", flexDirection: "column", gap: "2rem" }}>
         {items.map((item) => (

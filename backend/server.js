@@ -5,6 +5,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { formidable } from "formidable";
 import pino from "pino";
+import * as Sentry from "@sentry/node";
 import { z } from "zod";
 import {
   checkDatabaseHealth,
@@ -27,6 +28,13 @@ const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
 const TOKEN_TTL_MS = 1000 * 60 * 60 * 12;
 const UPLOAD_DIR = path.join(__dirname, "..", "public", "uploads");
 const logger = pino({ level: process.env.LOG_LEVEL || "info" });
+const sentryDsn = process.env.SENTRY_DSN;
+if (sentryDsn) {
+  Sentry.init({
+    dsn: sentryDsn,
+    environment: process.env.NODE_ENV || "production",
+  });
+}
 const loginSchema = z.object({
   email: z.string().email().max(254),
   password: z.string().min(1).max(512),
@@ -314,6 +322,14 @@ export async function handler(req, res) {
       { err: error, method: req.method, path: url, statusCode },
       "API request failed",
     );
+    if (sentryDsn) {
+      Sentry.withScope((scope) => {
+        scope.setExtra("method", req.method);
+        scope.setExtra("path", url);
+        scope.setExtra("statusCode", statusCode);
+        Sentry.captureException(error);
+      });
+    }
     json(res, statusCode, { error: message }, origin);
   }
 }

@@ -1,3 +1,6 @@
+import { useState } from "react";
+import EditorStatus from "../components/EditorStatus";
+import { captureException } from "./errorReporting";
 import useSectionEditor from "./useSectionEditor";
 
 function mapStats(contentItems) {
@@ -11,6 +14,7 @@ export default function StatsEditor() {
   const sectionName = "stats";
   const { addItem, isSaving, items, removeItem, saveItems, updateItem } =
     useSectionEditor(sectionName, mapStats);
+  const [status, setStatus] = useState(null);
 
   const handleAdd = () => {
     addItem({
@@ -36,9 +40,10 @@ export default function StatsEditor() {
         value: item.value,
       }));
       await saveItems(cleanItems);
-      alert("Stats saved successfully!");
+      setStatus({ type: "success", message: "Stats saved successfully!" });
     } catch (error) {
-      alert("Failed to save: " + error.message);
+      captureException(error, { action: "save-stats" });
+      setStatus({ type: "error", message: "Failed to save: " + error.message });
     }
   };
 
@@ -72,6 +77,8 @@ export default function StatsEditor() {
           </button>
         </div>
       </div>
+
+      <EditorStatus status={status} />
 
       <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
         {items.map((item) => (

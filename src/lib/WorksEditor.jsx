@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { useAuth } from "../context/AuthContext";
+import EditorStatus from "../components/EditorStatus";
 import { uploadFile } from "../lib/api";
+import { captureException } from "./errorReporting";
 import useSectionEditor from "./useSectionEditor";
 
 export default function WorksEditor({ sectionName = "featuredWorks" }) {
@@ -9,6 +11,7 @@ export default function WorksEditor({ sectionName = "featuredWorks" }) {
     useSectionEditor(sectionName);
   const [uploadingId, setUploadingId] = useState(null);
   const [newItem, setNewItem] = useState(null);
+  const [status, setStatus] = useState(null);
 
   const handleAdd = () => {
     setNewItem({
@@ -34,7 +37,11 @@ export default function WorksEditor({ sectionName = "featuredWorks" }) {
       await saveItems(updatedItems);
       setNewItem(null);
     } catch (error) {
-      alert("Failed to add new item: " + error.message);
+      captureException(error, { action: "add-work", sectionName });
+      setStatus({
+        type: "error",
+        message: "Failed to add new item: " + error.message,
+      });
     }
   };
 
@@ -55,7 +62,8 @@ export default function WorksEditor({ sectionName = "featuredWorks" }) {
       const response = await uploadFile(file, token);
       handleChange(id, "poster", response.url);
     } catch (error) {
-      alert("Upload failed: " + error.message);
+      captureException(error, { action: "upload-work-poster", sectionName });
+      setStatus({ type: "error", message: "Upload failed: " + error.message });
     } finally {
       setUploadingId(null);
     }
@@ -68,7 +76,11 @@ export default function WorksEditor({ sectionName = "featuredWorks" }) {
       const response = await uploadFile(file, token);
       handleNewItemChange("poster", response.url);
     } catch (error) {
-      alert("Upload failed: " + error.message);
+      captureException(error, {
+        action: "upload-new-work-poster",
+        sectionName,
+      });
+      setStatus({ type: "error", message: "Upload failed: " + error.message });
     } finally {
       setUploadingId(null);
     }
@@ -77,11 +89,13 @@ export default function WorksEditor({ sectionName = "featuredWorks" }) {
   const handleSave = async () => {
     try {
       await saveItems();
-      alert(
-        `${sectionName === "featuredWorks" ? "Featured Works" : "Works Archive"} saved successfully!`,
-      );
+      setStatus({
+        type: "success",
+        message: `${sectionName === "featuredWorks" ? "Featured Works" : "Works Archive"} saved successfully!`,
+      });
     } catch (error) {
-      alert("Failed to save: " + error.message);
+      captureException(error, { action: "save-works", sectionName });
+      setStatus({ type: "error", message: "Failed to save: " + error.message });
     }
   };
 
@@ -117,6 +131,8 @@ export default function WorksEditor({ sectionName = "featuredWorks" }) {
           </button>
         </div>
       </div>
+
+      <EditorStatus status={status} />
 
       <div style={{ display: "flex", flexDirection: "column", gap: "2rem" }}>
         {items.map((item) => (

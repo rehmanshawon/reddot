@@ -10,11 +10,14 @@
     "build": "vite build",
     "preview": "vite preview",
     "lint": "eslint .",
+    "typecheck": "tsc --noEmit --allowJs --checkJs false --jsx react-jsx --moduleResolution bundler --module esnext --target es2022 --skipLibCheck src/main.jsx",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
+    "@sentry/node": "^10.73.0",
+    "@sentry/react": "^10.73.0",
     "formidable": "^3.5.1",
     "pg": "^8.23.0",
     "pino": "^10.3.1",
@@ -35,6 +38,7 @@
     "eslint-plugin-react-hooks": "^7.1.1",
     "globals": "^17.11.0",
     "jsdom": "^25.0.1",
+    "typescript": "^7.0.2",
     "vite": "^5.4.19",
     "vitest": "^2.1.9"
   }
